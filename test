@@ -1,6 +1,29 @@
+include:
+  - component: путь/test-phpunit
+  - component: путь/build-node11
+  - component: путь/build-php
+
+
 stages:
   - test
   - build
   - deploy
+
+phpunit:
+  stage: test
+  script: echo 'Тест'
+
+build-js:
+  image: путь/node:18
+
+
+build-php:
+  stage: build
+  image: путь/php:8-4
+  script: echo "Build"
+
+deploy:
+  stage: deploy
+  script: echo "deploy"
 
 
