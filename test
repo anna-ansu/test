@@ -27,3 +27,4 @@ deploy:
   script: echo "deploy"
 
 
+- php vendor/bin/phpunit --colors=never --testsuite "Unit" --no-interaction --log-junit report.xml -d display_errors=on -d date.timezone="Etc/GMT-3"
