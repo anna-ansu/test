@@ -30,3 +30,43 @@ deploy:
 
 - php vendor/bin/phpunit --colors=never --testsuite "Unit" --no-interaction --log-junit report.xml -d display_errors=on -d date.timezone="Etc/GMT-3"
 docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.override.yml up -d
+
+
+
+14:42:34 INFO      [app] fixtures found
+[
+  "files" => [
+    "C:\project\bankrupts\bankrupts\fixtures\Bankrupt.yaml"
+  ]
+]
+[
+  "token" => null
+]
+14:42:34 INFO      [app] Purging database with purge mode "DELETE_MODE".
+[
+  "token" => null
+]
+14:42:34 INFO      [app] Loading fixtures.
+[
+  "token" => null
+]
+14:42:34 INFO      [app] Pre-processing objects.
+[
+  "token" => null
+]
+14:42:34 INFO      [app] Flushing objects.
+[
+  "token" => null
+]
+14:42:34 INFO      [app] Post-processing objects.
+[
+  "token" => null
+]
+14:42:34 INFO      [app] Done.
+[
+  "token" => null
+]
+14:42:34 INFO      [app] fixtures loaded
+[
+  "token" => null
+]
