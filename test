@@ -29,3 +29,4 @@ deploy:
 
 
 - php vendor/bin/phpunit --colors=never --testsuite "Unit" --no-interaction --log-junit report.xml -d display_errors=on -d date.timezone="Etc/GMT-3"
+docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.override.yml up -d
