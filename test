@@ -70,3 +70,12 @@ docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.ove
 [
   "token" => null
 ]
+
+
+
+ERROR  Failed to compile with 1 errors9:11:31 AM
+ error  in ./assets/controllers.json9:11:31 AM
+Module build failed (from ./node_modules/@symfony/stimulus-bridge/dist/webpack/loader.js):
+Error: The file "@symfony/ux-live-component/package.json" could not be found. Try running "yarn install --force".
+    at createControllersModule (/builds/U2515702/symfony-test/node_modules/@symfony/stimulus-bridge/dist/webpack/loader.js:46:19)
+    at Object.loader (/builds/U2515702/symfony-test/node_modules/@symfony/stimulus-bridge/dist/webpack/loader.js:106:43)
