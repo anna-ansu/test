@@ -31,6 +31,16 @@ deploy:
 - php vendor/bin/phpunit --colors=never --testsuite "Unit" --no-interaction --log-junit report.xml -d display_errors=on -d date.timezone="Etc/GMT-3"
 docker compose --env-file .env.local -f docker-compose.yml -f docker-compose.override.yml up -d
 
+static::getContainer()->get('mock_client')->setResponseFactory(
+            [
+                new MockResponse(
+                    file_get_contents(
+                       file
+                    )
+                )
+            ]
+        );
+
 
         $bus = static::getContainer()->get('messenger.bus.default');
         $envelope = $bus->dispatch(
