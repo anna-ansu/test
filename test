@@ -55,3 +55,59 @@ static::getContainer()->get('mock_client')->setResponseFactory(
             $data
         );
 
+
+
+@startuml
+actor User as user
+participant "API Gateway" as api
+participant "Handler" as handler
+database "FedR DB" as fedr
+database "Core DB" as core
+
+== Поиск по ФИО ==
+
+user -> api: Запрос поиска (ФИО)
+api -> handler: ProcessSearchMessage(ФИО)
+activate handler
+
+handler -> core: Запрос по ФИО
+core --> handler: Данные клиента (Core)
+handler -> fedr: Поиск по ФИО
+fedr --> handler: Данные клиента (FedR)
+
+alt Клиент найден в обеих БД
+    handler -> fedr: Обновить данные\nиз Core
+    fedr --> handler: Подтверждение
+else Клиент только в Core
+    handler -> fedr: Добавить нового клиента
+    fedr --> handler: ID нового клиента
+end
+
+handler -> api: Результат обработки
+deactivate handler
+api -> user: Ответ (обновленные/новые данные)
+
+== Поиск по ID ==
+
+user -> api: Запрос поиска (ID)
+api -> handler: ProcessSearchMessage(ID)
+activate handler
+
+handler -> core: Запрос по ID
+core --> handler: Данные клиента (Core)
+handler -> fedr: Поиск по ID
+fedr --> handler: Данные клиента (FedR)
+
+alt Клиент найден в обеих БД
+    handler -> fedr: Обновить данные\nиз Core
+    fedr --> handler: Подтверждение
+else Клиент только в Core
+    handler -> fedr: Добавить нового клиента
+    fedr --> handler: ID нового клиента
+end
+
+handler -> api: Результат обработки
+deactivate handler
+api -> user: Ответ (обновленные/новые данные)
+
+@enduml
