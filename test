@@ -111,3 +111,39 @@ deactivate handler
 api -> user: Ответ (обновленные/новые данные)
 
 @enduml
+
+
+@startuml
+participant "Message Bus" as bus
+participant "Handler" as handler
+database "FedR DB" as fedr
+database "Core DB" as core
+participant "Event Dispatcher" as dispatcher
+
+== Обработка сообщения ==
+
+bus -> handler: ProcessSearchMessage(ФИО/ID)
+activate handler
+
+handler -> core: Запрос клиента
+core --> handler: Данные клиента
+
+handler -> fedr: Поиск клиента
+fedr --> handler: Результат
+
+alt Клиент существует в FedR
+    handler -> fedr: Обновить данные
+    fedr --> handler: OK
+    handler -> dispatcher: ClientUpdatedEvent
+else Клиент не найден
+    handler -> fedr: Создать клиента
+    fedr --> handler: Новый ID
+    handler -> dispatcher: ClientCreatedEvent
+end
+
+deactivate handler
+
+== Обработка событий ==
+
+dispatcher -> bus: NewEventMessage()
+@enduml
