@@ -34,3 +34,6 @@ return $person;
 $message = new NameMessage('...');
 $handler = static::getContainer()->get(NameHandler::class);
 $data = $handler->__invoke($message);
+
+
+static::getContainer()->get('mock_client')_>setResponceFactory(new MockResponse ( вдругих примерах тут xml))
