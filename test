@@ -7,3 +7,24 @@ $s1 = array_shift($s)
 $s1 = preg_replace('/\D/', '', $s1[n'])
 
 
+try {
+  $response = $this->handle(...);
+
+  if(empty($response)) {
+    return null;
+  }
+
+  $c - достаем клиента из внешней базы по $message->getId()
+  if(null === $c) {
+    $c = new Client ($message->getId());
+  }
+
+$c->set...
+пречисляем параметры
+
+return $person;
+
+} catch (Throwable $e){
+  $this->logger->error($e->getMassage())
+  return null;
+}
