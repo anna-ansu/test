@@ -28,3 +28,9 @@ return $person;
   $this->logger->error($e->getMassage())
   return null;
 }
+
+
+
+$message = new NameMessage('...');
+$handler = static::getContainer()->get(NameHandler::class);
+$data = $handler->__invoke($message);
