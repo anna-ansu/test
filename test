@@ -37,3 +37,8 @@ $data = $handler->__invoke($message);
 
 
 static::getContainer()->get('mock_client')_>setResponceFactory(new MockResponse ( вдругих примерах тут xml))
+
+
+  $a = $c->getA()->findFirst(
+      fn(int $index, Account $a) => $a->getId() === $raw['id']
+  );
