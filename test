@@ -42,3 +42,14 @@ static::getContainer()->get('mock_client')_>setResponceFactory(new MockResponse 
   $a = $c->getA()->findFirst(
       fn(int $index, Account $a) => $a->getId() === $raw['id']
   );
+
+
+
+
+  +query: Symfony\Component\HttpFoundation\InputBag^ {#3080
+    #parameters: array:3 [
+      "utm_source" => ".."
+      "cnv_id" => ".."
+      "cardid" => "111"
+    ]
+  }
