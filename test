@@ -1,4 +1,4 @@
-$s = array_filter(
+да$s = array_filter(
 $data['i'] ?? [],
 fn(array $identity) => $identity['ip'] === 'IC',
 );
@@ -53,3 +53,63 @@ static::getContainer()->get('mock_client')_>setResponceFactory(new MockResponse 
       "cardid" => "111"
     ]
   }
+
+
+
+
+@startuml CustomerHandlers
+
+' Сущность Клиент
+class Customer {
+  +id: int
+  +name: string
+  +email: string
+  +createdAt: DateTime
+  --
+  +getId(): int
+  +getName(): string
+  +setName(name: string): void
+  +getEmail(): string
+  +setEmail(email: string): void
+}
+
+' Репозиторий для работы с БД
+class CustomerRepository {
+  +findAll(): array<Customer>
+  +findBy(criteria: array): array<Customer>
+  +find(id: int): Customer|null
+  +save(customer: Customer): void
+  +update(customer: Customer): void
+}
+
+' Обработчик поиска клиентов
+class CustomerSearchHandler {
+  -repository: CustomerRepository
+  --
+  +__construct(repository: CustomerRepository)
+  +searchByName(name: string): array<Customer>
+  +searchByEmail(email: string): array<Customer>
+}
+
+' Обработчик обновления клиента
+class CustomerUpdateHandler {
+  -repository: CustomerRepository
+  -validator: ValidatorInterface
+  --
+  +__construct(repository: CustomerRepository, validator: ValidatorInterface)
+  +updateCustomer(id: int, data: array): Customer
+  +validateCustomer(customer: Customer): void
+}
+
+' Валидатор (интерфейс Symfony)
+interface ValidatorInterface {
+  +validate(value: object, constraints: null|Constraint|array): ConstraintViolationListInterface
+}
+
+' Связи между классами
+CustomerRepository "1" --> "*" Customer : содержит
+CustomerSearchHandler --> CustomerRepository : использует
+CustomerUpdateHandler --> CustomerRepository : использует
+CustomerUpdateHandler --> ValidatorInterface : использует
+
+@enduml
