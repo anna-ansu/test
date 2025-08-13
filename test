@@ -1,7 +1,3 @@
-
-
-        // $client = $this->handle(
-        //     new NMessage(
-        //         $message->Id()
-        //     )
-        // );
+Symfony\Component\DependencyInjection\Exception\RuntimeException: 
+Cannot autowire service "...": argument "$s" of method "__construct()" 
+references interface "Symfony\Component\Workflow\WorkflowInterface" but no such service exists. 
