@@ -1,3 +1,19 @@
-Symfony\Component\DependencyInjection\Exception\RuntimeException: 
-Cannot autowire service "...": argument "$s" of method "__construct()" 
-references interface "Symfony\Component\Workflow\WorkflowInterface" but no such service exists. 
+в тестах обращение
+
+$n = new NameLIsner(
+  $cNotificatorFactory,
+  $sNotificatorFactory
+)
+
+$n::avaliable($o);
+
+
+class cNotificatorFactory {
+  ....
+
+  protected avaliable($o): bool {
+  ...
+  }
+}
+
+ошибка Error : Call to undefined method avaliable
