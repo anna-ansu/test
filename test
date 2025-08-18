@@ -1,19 +1,1 @@
-в тестах обращение
 
-$n = new NameLIsner(
-  $cNotificatorFactory,
-  $sNotificatorFactory
-)
-
-$n::avaliable($o);
-
-
-class cNotificatorFactory {
-  ....
-
-  protected avaliable($o): bool {
-  ...
-  }
-}
-
-ошибка Error : Call to undefined method avaliable
