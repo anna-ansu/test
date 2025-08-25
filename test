@@ -165,4 +165,30 @@ deploy:
     rules:
       - if: $CI_COMMIT_BRANCH == "main"
 
+version: "3.9"
 
+services:
+  app:
+    image: registry.gitlab.com/group/project/myapp:latest
+    container_name: myapp
+    restart: always
+    environment:
+      APP_ENV: test
+      APP_DEBUG: 1
+    ports:
+      - "8080:80"   # проброс наружу
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypass
+      POSTGRES_DB: mydb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
