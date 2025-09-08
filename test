@@ -34,3 +34,34 @@ up:
 down:
     environment:
         name: "$TAG"
+
+
+
+FROM .. php:8-4
+COPY . /app/
+
+# RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
+RUN mv "/app/build/docker-entrypoint.sh" "/usr/local/bin/docker-entrypoint" && \
+    chmod 755 /usr/local/bin/docker-entrypoint && \
+    rm -Rf build/ && \
+    set -eux && \
+	mkdir -p var/cache var/log files && \
+	chmod +x bin/console; sync && \
+    php bin/console cache:clear --env=prod
+
+
+CMD ["php", "-S", "localhost:80", "-t", "public"]
+
+
+docker-entrypoint.sh - 
+
+set -e
+
+if [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
+    if [ "$( find ./migrations -iname '*.php' -print -quit )" ]; then
+        php bin/console doctrine:migrations:migrate --no-interaction
+    fi
+fi
+
+exec docker-php-entrypoint "$@"
+
