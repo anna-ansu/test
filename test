@@ -67,13 +67,11 @@ exec docker-php-entrypoint "$@"
 
 
 
-
 SECURITY WARNING: You are building a Docker image from Windows against a non-Windows Docker host. All files and directories added to build context will have
 '-rwxr-xr-x' permissions. It is recommended to double check and reset permissions for sensitive files and directories.
-Creating symfony-test-php ... error
-
-ERROR: for symfony-test-php  Cannot create container for service php: create .: volume name is too short, names should be at least two alphanumeric character
-s
-
-ERROR: for php  Cannot create container for service php: create .: volume name is too short, names should be at least two alphanumeric characters
-ERROR: Encountered errors while bringing up the project.
+Recreating symfony-test-php ... done
+Exception ignored in: <function Popen.__del__ at 0x0000024469D194C0>
+Traceback (most recent call last):
+  File "subprocess.py", line 1051, in __del__
+  File "subprocess.py", line 1453, in _internal_poll
+OSError: [WinError 6] Неверный дескриптор
