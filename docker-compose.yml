@@ -1,0 +1,9 @@
+services:
+  php:
+    build: .
+    container_name: symfony-test-php
+    ports:
+      - "80:80"
+    volumes:
+      # - .:/app
+      - "/c/project/symfony-test-final/symfony-test:/app"
