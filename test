@@ -75,3 +75,14 @@ Traceback (most recent call last):
   File "subprocess.py", line 1051, in __del__
   File "subprocess.py", line 1453, in _internal_poll
 OSError: [WinError 6] Неверный дескриптор
+
+$ docker build -t $DOCKER_IMAGE .
+ERROR: "docker buildx build" requires exactly 1 argument.
+See 'docker buildx build --help'.
+Usage:  docker buildx build [OPTIONS] PATH | URL | -
+Start a build
+Cleaning up project directory and file based variables
+00:01
+ERROR: Job failed: exit code 1
+
+
