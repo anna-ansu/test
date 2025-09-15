@@ -28,3 +28,10 @@ y
   </script>
 </body>
 </html>
+
+
+  "scripts": {
+    "lint": "eslint --fix ./; true",
+    "start": "webpack serve --config webpack/dev.js",
+    "build": "rm -rf build/* && webpack --config webpack/prod.js --progress --profile --bail"
+  },
