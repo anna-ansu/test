@@ -1,4 +1,4 @@
-
+щ
 <i> [webpack-dev-server] [HPM] Proxy created: /public/api  -> http://0000:3001
 <i> [webpack-dev-server] Project is running at:
 <i> [webpack-dev-server] Loopback: http://localhost:8080/
@@ -35,3 +35,8 @@ y
     "start": "webpack serve --config webpack/dev.js",
     "build": "rm -rf build/* && webpack --config webpack/prod.js --progress --profile --bail"
   },
+
+
+
+
+"build": "if exist build rmdir /s /q build && mkdir build && webpack --config webpack/prod.js --progress --profile --bail"
