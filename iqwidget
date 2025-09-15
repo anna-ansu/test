@@ -5,3 +5,26 @@
 <i> [webpack-dev-server] On Your Network (IPv4): http://0000:8080/
 <i> [webpack-dev-server] Content not from webpack is served from '...iqchannels-widget-master\public' director
 y
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>IQChannels Widget Test</title>
+</head>
+<body>
+  <h1>Мой тестовый виджет</h1>
+
+  <!-- Подключаем локальную сборку виджета -->
+  <script src="/widget/widget.min.js"></script>
+
+  <script>
+    // Инициализация виджета
+    var widget = new IQChannelsWidget({
+      channel: "support",    // название канала, если есть
+      mode: "web"            // можно web или mobile
+      // credentials: "user-token"  <-- опционально, если авторизация
+    });
+  </script>
+</body>
+</html>
