@@ -48,3 +48,5 @@ y
 		filename: '[name].min.js',
 		sourceMapFilename: '[name].js.map'
 	}
+> widget@1.0.0 build
+> if exist build rmdir /s /q build && mkdir build && webpack --config webpack/prod.js --progress --profile --bail
