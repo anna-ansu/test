@@ -40,3 +40,11 @@ y
 
 
 "build": "if exist build rmdir /s /q build && mkdir build && webpack --config webpack/prod.js --progress --profile --bail"
+
+
+	output: {
+		path: path.join(__dirname, '../build'),
+		publicPath: '/widget/',
+		filename: '[name].min.js',
+		sourceMapFilename: '[name].js.map'
+	}
