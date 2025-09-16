@@ -70,3 +70,27 @@ document.querySelector('.close-btn').addEventListener('click', function() {
     }
   }
 });
+
+
+
+<!-- это твой html -->
+<button id="close-widget">Закрыть чат</button>
+
+<script>
+  document.getElementById('close-widget').addEventListener('click', function () {
+    // 1. если у виджета есть метод close() — используем его
+    if (typeof widget !== 'undefined' && typeof widget.close === 'function') {
+      widget.close();
+      console.log("Widget.close() вызван");
+    } else {
+      // 2. если метода нет — просто скрываем контейнер
+      var container = document.querySelector('#iqchannels-widget'); // уточни id контейнера
+      if (container) {
+        container.style.display = 'none';
+        console.log("Виджет скрыт через display:none");
+      } else {
+        console.warn("Контейнер виджета не найден");
+      }
+    }
+  });
+</script>
