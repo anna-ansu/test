@@ -94,3 +94,30 @@ document.querySelector('.close-btn').addEventListener('click', function() {
     }
   });
 </script>
+
+
+var buttons = document.querySelectorAll('.open-widget');
+    dump(buttons);
+    buttons.forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        widget.open();
+        console.log("Widget.open()");
+      });
+    });
+
+
+    document.querySelector('.close-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log('.close-btn');
+      if (typeof widget !== 'undefined' && typeof widget.close === 'function') {
+        widget.close();
+        console.log('Widget.close()');
+      } else {
+        var container = document.querySelector('#iqchannels-widget'); 
+        if (container) {
+          container.style.display = 'none';
+          console.log('Виджет скрыт через display:none');
+        }
+      }
+    });
