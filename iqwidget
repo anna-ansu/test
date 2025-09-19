@@ -1,4 +1,23 @@
-щ
+<script>
+  var container = document.querySelector('#iqchannels-widget');
+  if (container) {
+    new MutationObserver(function() {
+      var errorBox = document.querySelector('.iqchannels-error');
+      if (errorBox && !errorBox.querySelector('.iq-close-error')) {
+        var btn = document.createElement('button');
+        btn.textContent = 'Закрыть';
+        btn.className = 'iq-close-error';
+        errorBox.appendChild(btn);
+
+        btn.addEventListener('click', function() {
+          container.style.display = 'none';
+          console.log("Виджет закрыт по кнопке из ошибки");
+        });
+      }
+    }).observe(container, { childList: true, subtree: true });
+  }
+</script>
+
 <i> [webpack-dev-server] [HPM] Proxy created: /public/api  -> http://0000:3001
 <i> [webpack-dev-server] Project is running at:
 <i> [webpack-dev-server] Loopback: http://localhost:8080/
