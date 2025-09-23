@@ -103,3 +103,40 @@ private WorkflowInterface $synchronizationWithCFStateMachine,
     }
 
 $this->synchronizationWithCFStateMachine->apply($b, 'ToSynchronized');
+
+
+private function applyTransitionToBatch(iterable $bs, string $transition): void
+{
+    foreach ($bs as $b) {
+        if ($this->synchronizationWithCFStateMachine->can($b, $transition)) {
+            $this->synchronizationWithCFStateMachine->apply($b, $transition);
+            $this->entityManager->persist($b); // готовим к сохранению
+        } else {
+            $this->logger->warning(
+                'Transition {transition} not allowed for bankrupt {id}',
+                ['transition' => $transition, 'id' => $b->getId()]
+            );
+        }
+    }
+
+    // сохраняем пачкой, а не по одному
+    $this->entityManager->flush();
+}
+
+
+$i = 0;
+foreach ($bs as $b) {
+    if ($this->synchronizationWithCFStateMachine->can($b, $transition)) {
+        $this->synchronizationWithCFStateMachine->apply($b, $transition);
+        $this->entityManager->persist($b);
+    }
+
+    if (($i % 1000) === 0) { // каждые 1000 штук
+        $this->entityManager->flush();
+        $this->entityManager->clear();
+    }
+    $i++;
+}
+
+$this->entityManager->flush();
+$this->entityManager->clear();
