@@ -86,3 +86,20 @@ Cleaning up project directory and file based variables
 ERROR: Job failed: exit code 1
 
 
+private WorkflowInterface $synchronizationWithCFStateMachine,
+
+ private function applyTransitionToBatch(iterable $bs, string $transition): void
+    {
+        foreach ($bs as $b) {
+            if ($this->synchronizationWithCFStateMachine->can($b, $transition)) {
+                $this->synchronizationWithCFStateMachine->apply($b, $transition);
+            } else {
+                $this->logger->warning(
+                    'Transition {transition} not allowed for bankrupt {id}',
+                    ['transition' => $transition, 'id' => $b->getId()]
+                );
+            }
+        }
+    }
+
+$this->synchronizationWithCFStateMachine->apply($b, 'ToSynchronized');
