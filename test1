@@ -120,4 +120,35 @@ graph TD
 
 Принцип работы - вот что главное
 Я выше объяснял. Есть воркер. У него есть доступ ТОЛЬКО к api
+
+
+flowchart TB
+
+subgraph CONTROL["Оркестрация"]
+    Server["Prefect Server\n(управляет задачами)"]
+end
+
+subgraph WORKERS["Исполнители"]
+    Worker1["Worker Node\n(скрейпинг процесс)"]
+    Worker2["Worker Node\n(скрейпинг процесс)"]
+end
+
+subgraph API_LAYER["Единая точка доступа"]
+    API["Backend API\n(вход/выход данных)"]
+end
+
+subgraph STORAGE["Хранилище данных"]
+    S3["S3 / Raw Data"]
+    DB["Postgres / DWH"]
+end
+
+
+Server -->|задачи| Worker1
+Server -->|задачи| Worker2
+
+Worker1 -->|HTTPS 443 only| API
+Worker2 -->|HTTPS 443 only| API
+
+API --> S3
+API --> DB
  
