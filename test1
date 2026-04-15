@@ -380,3 +380,55 @@ flowchart LR
     J --> F
 
     K[RBAC] --> H
+
+
+
+flowchart TD
+
+subgraph CONTROL["Оркестрация (CI/CD)"]
+    CI["CI/CD Pipeline\n(GitLab / Forgejo)"]
+end
+
+subgraph WORKERS["Исполнители"]
+    W1["Container\n(Scraper / Extract)"]
+    W2["Container\n(Transform)"]
+    W3["Container\n(Load)"]
+end
+
+subgraph API_LAYER["Единая точка доступа"]
+    API["Backend API"]
+end
+
+subgraph STORAGE["Хранилище"]
+    S3["S3 / Raw / Artifacts"]
+    DB["Postgres / DWH"]
+end
+
+subgraph REPORTING["Отчеты"]
+    REP["Reporting Service"]
+end
+
+%% Оркестрация
+CI --> W1
+CI --> W2
+CI --> W3
+
+%% Extract
+W1 -->|HTTPS| API
+API --> S3
+
+%% Transform
+S3 --> API
+API --> W2
+W2 --> API
+API --> S3
+
+%% Load
+S3 --> API
+API --> W3
+W3 --> API
+API --> DB
+
+%% Reporting
+DB --> REP
+REP --> API
