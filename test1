@@ -432,3 +432,18 @@ API --> DB
 %% Reporting
 DB --> REP
 REP --> API
+
+
+recipes symfony/security-bundle
+
+Error downloading exact git sha for installed recipe.
+name             : symfony/security-bundle
+version          : 5.3
+status           : up to date
+installed recipe : https://github.com/symfony/recipes/tree/main/symfony/security-bundle/5.3
+files            :
+
+└──.
+   └──config
+      └──packages
+         └──security.yaml
