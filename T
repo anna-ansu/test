@@ -965,3 +965,210 @@ Export	отчеты
 упростить это до “1 слайда для менеджера”
 
 или разложить что здесь будет первым MVP шагом и что можно отложить
+
+
+Если речь про свою reporting system (job-based), то правильнее думать не “от пользователя” и не “от базы”, а от запуска задачи (job).
+
+
+---
+
+🧠 Главная идея
+
+> Reporting system = система, где job запускает сбор → обработку → выдачу отчёта
+
+
+
+
+---
+
+1. Что такое “reporting job”
+
+Это не просто запрос.
+
+Это:
+
+Запрос на отчет → выполнение SQL → обработка → результат → выдача
+
+или в более строгом виде:
+
+вход: параметры (даты, пользователь, фильтры)
+
+процесс: SQL + бизнес-логика
+
+выход: JSON / PDF / CSV
+
+
+
+---
+
+2. Кто запускает job
+
+Есть 2 варианта:
+
+🟢 1. Пользователь (on-demand)
+
+User → API → job → результат
+
+
+---
+
+🟡 2. Система (scheduled)
+
+Cron / scheduler → job → PDF / storage
+
+
+---
+
+3. Правильная архитектура reporting job
+
+flowchart TB
+
+User["User"]
+
+subgraph FRONT["Frontend"]
+    UI["React / JS Dashboard"]
+end
+
+subgraph API["Reporting API"]
+    RBAC["Auth + RBAC"]
+    JOBS["Job Controller"]
+end
+
+subgraph ENGINE["Job Execution Layer"]
+    SQL["SQL Layer (metrics)"]
+    EXEC["Job Runner"]
+end
+
+subgraph DB["Postgres"]
+    DATA["Raw Data"]
+end
+
+subgraph OUTPUT["Outputs"]
+    PDF["PDF / CSV Export"]
+end
+
+User --> UI
+UI --> JOBS
+
+JOBS --> RBAC
+RBAC --> JOBS
+
+JOBS --> EXEC
+EXEC --> SQL
+SQL --> DATA
+
+EXEC --> PDF
+PDF --> UI
+
+
+---
+
+4. Что тут главное (очень важно)
+
+🔹 1. API не “отдает данные”, а запускает job
+
+GET /report → запускается job
+
+
+---
+
+🔹 2. SQL слой не внутри API, а внутри job
+
+job → SQL → результат
+
+
+---
+
+🔹 3. Frontend не тянет данные напрямую
+
+Он:
+
+запускает job
+
+получает результат
+
+
+
+---
+
+5. Как выглядит lifecycle job
+
+1. User нажал "generate report"
+2. API создал job
+3. Job взял SQL
+4. Postgres → данные
+5. обработка
+6. сохранение результата
+7. фронт получил результат
+
+
+---
+
+6. Важный сдвиг мышления
+
+❌ НЕ правильно думать:
+
+“фронт дергает данные”
+
+“API возвращает отчет”
+
+
+
+---
+
+✅ правильно:
+
+> “система выполняет job и возвращает результат”
+
+
+
+
+---
+
+7. Где тут RBAC
+
+RBAC применяется:
+
+при создании job
+
+внутри job (фильтры SQL)
+
+при доступе к результату
+
+
+
+---
+
+8. Где Postgres в этой модели
+
+Postgres = не “источник ответа”, а:
+
+источник данных для job
+
+storage для результатов (опционально)
+
+
+
+---
+
+9. Итог (очень коротко)
+
+> Reporting system = job engine над Postgres + SQL layer + API
+
+
+
+
+---
+
+10. Самая правильная формула
+
+User → API → Job → SQL → Postgres → Result → Frontend
+
+
+---
+
+Если хочешь дальше, могу:
+
+показать разницу job-based vs BI (Metabase/Superset)
+
+или дать минимальную реализацию job runner (без очередей, на чистом API)
