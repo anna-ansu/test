@@ -709,3 +709,259 @@ Frontend = визуализация
 сравнить их **на твоём кейсе (ставки, ресурсы, обновления страниц)**
 
 или показать **как разложить таблицы в Postgres, чтобы BI нормально работал**
+
+
+Ок, делаю среднюю (реалистичную) архитектуру: уже не MVP, но ещё без перегруза очередями и кешами.
+
+Ты оставляешь только то, что реально нужно.
+
+
+---
+
+🧠 Средняя схема (clean enterprise-lite)
+
+Включает:
+
+Postgres
+
+SQL layer
+
+RBAC + Auth
+
+Reporting API
+
+Frontend (React или чистый JS)
+
+Dashboard
+
+Export PDF
+
+
+
+---
+
+🧩 Схема
+
+flowchart TB
+
+subgraph DB["Database"]
+    PG["Postgres (raw + structured data)"]
+end
+
+subgraph SQL["SQL Layer"]
+    Q["Views / Queries / Aggregations"]
+end
+
+subgraph API["Backend API"]
+    AUTH["Auth + RBAC"]
+    REPORTS["Reporting API"]
+    EXPORT["PDF Export Service"]
+end
+
+subgraph FRONT["Frontend"]
+    UI["React / JS"]
+    DASH["Dashboard (charts + tables)"]
+end
+
+USER["User"]
+
+%% FLOW
+USER --> UI
+UI --> DASH
+UI --> REPORTS
+
+REPORTS --> AUTH
+AUTH --> REPORTS
+
+REPORTS --> Q
+Q --> PG
+
+REPORTS --> EXPORT
+EXPORT --> UI
+
+REPORTS --> UI
+UI --> DASH
+
+
+---
+
+🔁 Как это работает (по слоям)
+
+
+---
+
+🟢 1. Postgres
+
+Хранит:
+
+ставки
+
+ресурсы
+
+события
+
+агрегируемые данные
+
+
+
+---
+
+🟡 2. SQL layer
+
+Это:
+
+views
+
+сложные SELECT
+
+агрегации
+
+
+👉 превращает raw data → метрики
+
+
+---
+
+🔵 3. Auth + RBAC
+
+Контролирует:
+
+кто видит отчет
+
+какие данные доступны
+
+
+user → role → permission → SQL filter
+
+
+---
+
+🟣 4. Reporting API
+
+Центральный слой:
+
+принимает запросы фронта
+
+применяет RBAC
+
+вызывает SQL
+
+возвращает JSON
+
+
+
+---
+
+🟠 5. Export PDF
+
+формирует отчеты
+
+рендерит HTML → PDF
+
+отдает файл пользователю
+
+
+
+---
+
+🔴 6. Frontend (React / JS)
+
+Отвечает за:
+
+дашборды
+
+графики
+
+фильтры
+
+вызовы API
+
+
+
+---
+
+📊 Как выглядит поток данных
+
+User
+ → Frontend (React/JS)
+ → Reporting API
+ → RBAC check
+ → SQL Layer
+ → Postgres
+ → JSON result
+ → Frontend Dashboard
+
++ optional:
+Reporting API → PDF Export → User download
+
+
+---
+
+🧠 Что важно в этой версии
+
+✔ Уже есть:
+
+нормальная безопасность (RBAC)
+
+разделение логики (SQL слой)
+
+единый API
+
+фронт как визуализация
+
+экспорт отчетов
+
+
+
+---
+
+❌ Но ещё нет:
+
+очередей
+
+кеша
+
+сложной аналитики
+
+BI системы
+
+
+
+---
+
+⚖️ Почему это “средний уровень”
+
+слой	статус
+
+Postgres	база
+SQL layer	аналитика
+API	бизнес-логика
+RBAC	безопасность
+Frontend	визуализация
+Export	отчеты
+
+
+
+---
+
+🎯 Итог
+
+> Это нормальная production архитектура для reporting системы без BI:
+
+
+
+уже масштабируется
+
+уже безопасна
+
+ещё не перегружена
+
+
+
+---
+
+Если хочешь дальше, могу:
+
+упростить это до “1 слайда для менеджера”
+
+или разложить что здесь будет первым MVP шагом и что можно отложить
