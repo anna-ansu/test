@@ -2,3 +2,15 @@ sqlldr system/test@//localhost:1521/XEPDB1 \
 control=/data/data.ctl \
 log=/data/load.log \
 bad=/data/bad.log
+
+
+load data
+ CHARACTERSET CL8MSWIN1251
+ infile '*.txt'
+ append
+ into table name-table
+ fields terminated by "^"
+ TRAILING NULLCOLS  
+ (
+  "ID"
+  ...
