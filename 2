@@ -1,3 +1,20 @@
+ "ID" NUMBER GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL, 
+
+ load data
+ CHARACTERSET CL8MSWIN1251
+ infile '/data/xxx.TXT'
+ append
+ into table CARD_LIMIT_INCREASE_RESULTS
+ fields terminated by "^"
+ TRAILING NULLCOLS  
+ (
+ ...
+
+ все без id так как он должен автогенерироваться
+
+
+
+
 sqlldr system/test@//localhost:1521/XEPDB1 \
 control=/data/data.ctl \
 log=/data/load.log \
