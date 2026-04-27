@@ -1,54 +1,36 @@
- "ID" NUMBER GENERATED ALWAYS AS IDENTITY (START WITH 1 INCREMENT BY 1) NOT NULL, 
-
- load data
+load data
  CHARACTERSET CL8MSWIN1251
  infile '/data/xxx.TXT'
  append
- into table CARD_LIMIT_INCREASE_RESULTS
+ into table TABLE_NAME
  fields terminated by "^"
  TRAILING NULLCOLS  
  (
+ "DATE" date "YYYYMMDDHH24MISS",
  ...
+ )
 
- все без id так как он должен автогенерироваться
-
-
-
-
-sqlldr system/test@//localhost:1521/XEPDB1 \
-control=/data/data.ctl \
-log=/data/load.log \
-bad=/data/bad.log
+ все без ID 
 
 
-load data
- CHARACTERSET CL8MSWIN1251
- infile '*.txt'
- append
- into table name-table
- fields terminated by "^"
- TRAILING NULLCOLS  
- (
-  "ID"
-  ...
+ CREATE SEQUENCE SEQ_TABLE_NAME START WITH 1 INCREMENT BY 1;
+
+ CREATE TABLE TABLE_NAME
+    ( 
+    "ID" NUMBER,
+    "DATE" DATE, 
+    ...
+    ) 
 
 
-Path used:      Conventional
-SQL*Loader-500: Unable to open file (name.txt)
-SQL*Loader-553: file not found
-SQL*Loader-509: System error: No such file or directory
-SQL*Loader-2026: the load was aborted because SQL Loader cannot continue.
-
-Table name-table:
-  0 Rows successfully loaded.
-
-Check the log file:
-  /tmp/load.log
-for more information about the load.
+CREATE OR REPLACE TRIGGER TRIGGER_TABLE_NAME
+BEFORE INSERT ON TABLE_NAME
+FOR EACH ROW
+BEGIN
+  IF INSERTING AND :NEW.ID IS NULL THEN
+    SELECT TABLE_NAME.NEXTVAL INTO :NEW.ID FROM DUAL;
+  END IF;
+END;
 
 
-sqlldr $DATABASE_TNS control=data.ctl skip=1 || true
-
-
-формат даты 20260320100503 
-пример ввода даты , "INSERT_DATE" date "dd/MM/yyyy hh24:mi:ss"
+Date^Date2^....
