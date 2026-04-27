@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  loader:
+    image: твой-образ-с-oracle-client
+    volumes:
+      - oracle-init:/data
+    command: >
+      bash -c "
+      for f in /data/*.txt; do
+        echo Loading $f;
+        sqlldr system/test@//oracle:1521/XEPDB1 \
+          control=/data/data.ctl \
+          data=$f \
+          log=/data/$(basename $f).log \
+          bad=/data/$(basename $f).bad;
+      done
+      "
+
+volumes:
+  oracle-init:
+    external: true
