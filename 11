@@ -25,3 +25,18 @@ fi
 done
 
 echo "DONE"
+
+
+
+services:
+  loader:
+    image: твой-образ-с-sqlldr
+    user: root
+    volumes:
+      - oracle-init:/data
+    command: >
+      bash -c "
+      chmod -R 777 /data &&
+      mkdir -p /data/incoming /data/processed /data/error /data/logs &&
+      bash /data/load.sh
+      "
