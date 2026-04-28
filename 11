@@ -40,3 +40,6 @@ services:
       mkdir -p /data/incoming /data/processed /data/error /data/logs &&
       bash /data/load.sh
       "
+
+
+Триггер не срабатывал при DIRECT=TRUE
