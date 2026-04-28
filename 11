@@ -43,3 +43,5 @@ services:
 
 
 Триггер не срабатывал при DIRECT=TRUE
+
+sqlldr user/pass control=xxx.ctl direct=true
