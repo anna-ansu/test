@@ -2,3 +2,28 @@ ERROR: Job failed (system failure): prepare environment: Error response from dae
 failed to create shim task: OCI runtime create failed: runc create failed: 
 unable to start container process: exec: "...": executable file not found in $PATH: unknown (...). 
 Check https://docs.gitlab.com/runner/shells/#shell-profile-loading for more information
+
+
+debug_job:
+  stage: test
+  script:
+    - echo "=== ENV ==="
+    - echo "SHELL=$SHELL"
+    - echo "PATH=$PATH"
+
+    - echo "=== WHOAMI ==="
+    - whoami || true
+
+    - echo "=== CHECK BINARIES ==="
+    - which bash || echo "no bash"
+    - which sh || echo "no sh"
+    - which python || echo "no python"
+    - which sqlldr || echo "no sqlldr"
+    - which ftp || echo "no ftp"
+
+    - echo "=== ROOT FS ==="
+    - ls -la /
+
+    - echo "=== TRY SHELL ==="
+    - sh -c "echo sh works"
+    - bash -c "echo bash works" || echo "bash failed"
