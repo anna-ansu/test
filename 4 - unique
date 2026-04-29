@@ -1,0 +1,24 @@
+CREATE TABLE TABLE_NAME (
+  report_date   DATE,
+  insert_date   DATE,
+
+);
+
+-- уникальность бизнес-логики
+CREATE UNIQUE INDEX ux_table_name
+ON TABLE_NAME (report_date, product_id);
+
+LOAD DATA
+CHARACTERSET CL8MSWIN1251
+INFILE '/data/xxx.TXT'
+APPEND
+INTO TABLE TABLE_NAME
+FIELDS TERMINATED BY "^"
+TRAILING NULLCOLS
+(
+  report_date  CHAR "TO_DATE(:report_date,'YYYYMMDDHH24MISS')",
+  insert_date  SYSDATE,
+
+)
+
+sqlldr userid=user/pass@db control=load.ctl log=load.log bad=load.bad errors=100000
