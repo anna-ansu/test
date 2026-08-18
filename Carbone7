@@ -1,0 +1,425 @@
+---
+source: https://carbone.io/documentation/design/advanced-features/html.html
+title: "HTML Rendering for Documents: Transforming WYSIWYG and AI-Generated HTML into ODT, DOCX, and PDF"
+description: "HTML Rendering for Documents: Transforming WYSIWYG and AI-Generated HTML into ODT, DOCX, and PDF."
+generated_at: "2026-08-15"
+---
+
+# HTML
+
+HTML Rendering for Documents: Transforming WYSIWYG and AI-Generated HTML into ODT, DOCX, and PDF.  
+ENTERPRISE FEATURE Available for:  
+✓ Carbone Cloud  
+✓ Carbone On-premise  
+✗ Embedded Carbone JS   v5.0+ 
+
+## :html
+
+> ℹ️ **Note:** Compatible with DOCX, ODT and HTML templates. The generated document can be exported to PDF.
+
+The `:html` formatter converts HTML content into native document formatting for DOCX and ODT templates, enabling rich text, structured layouts, and semantic document elements. List of Supported HTML Elements:
+
+| Category | Elements | Documentation |
+| --- | --- | --- |
+| **Text formatting** | `<b>`, `<strong>`, `<i>`, `<em>`, `<u>`, `<s>`, `<del>`, `<sup>`, `<sub>`, `<mark>`, `<code>`, `<kbd>`, `<samp>` | [Formatting Elements](/documentation/design/advanced-features/html.md#formatting-elements) |
+| **Structure** | `<p>`, `<br>`, `<pre>`, `<hr>` | [Structure Elements](/documentation/design/advanced-features/html.md#structure-elements) |
+| **Lists** | `<ul>`, `<ol>`, `<li>` | [List Elements](/documentation/design/advanced-features/html.md#list-elements) |
+| **Task lists** | `<input type="checkbox">` | [Checkbox Element](/documentation/design/advanced-features/html.md#checkbox-element) |
+| **Quotes** | `<blockquote>` | [Quote Element](/documentation/design/advanced-features/html.md#quote-element) |
+| **Headings** | `<h1>`,`<h2>`,`<h3>`,`<h4>`,`<h5>`, `<h6>` | [Heading Elements](/documentation/design/advanced-features/html.md#heading-elements) |
+| **Tables** | `<table>`, `<tr>`, `<th>`, `<td>` (with `colspan`, `rowspan`) | [Table Element](/documentation/design/advanced-features/html.md#table-element) |
+| **Links** | `<a href="...">` | [Anchor Element](/documentation/design/advanced-features/html.md#hyperlink-element) |
+| **Media** | `<img src="...">` | [Image Element](/documentation/design/advanced-features/html.md#image-element) |
+
+**Notes**
+
+-   Tags and attributes not listed above are ignored during conversion. Their content is still rendered as unformatted text.
+
+## Usage
+
+```cdata
+{
+  "name" : "<b>raptor</b>",
+  "description" : "The engine is <u>powered</u> by <i>cryogenic liquid methane</i><br>and<br><b><i>liquid oxygen</i></b> (LOX),<br><s>rather than the RP-1 kerosene and LOX</s>."
+}
+```
+
+```ctemplate
+Name:{d.name:html}
+
+Description: {d.description:html}
+```
+
+```cresult
+Name:
+<b>raptor</b>
+
+Description:
+The engine is <u>powered</u> by <i>cryogenic liquid methane</i>
+and
+<b><i>liquid oxygen</i></b> (LOX),
+<s>rather than the RP-1 kerosene and LOX</s>.
+```
+
+**Note:** The `:html` formatter renders the HTML content in a [new paragraph](/documentation/design/advanced-features/html.md#paragraph-handling). To inject HTML in the current paragraph, enable the **inline** mode.
+
+## Options
+
+| Option | Description | Usage | Applies to |
+| --- | --- | --- | --- |
+| `inline` | Render HTML within the current paragraph without creating new paragraphs or line breaks. [Learn more.](/documentation/design/advanced-features/html.md#paragraph-handling) | `{d.value:html(inline)}` | `<a>`, `<b>`, `<strong>`, `<em>`, `<i>`, `<s>`, `<del>`, `<u>`, `<sup>`, `<sub>`, `<mark>`, `<code>`, `<kbd>`, `<samp>` |
+| `nospace` | Remove automatic spacing after HTML block elements. [Learn more.](/documentation/design/advanced-features/html.md#spacing-behaviors) | `{d.value:html(nospace)}` | `<p>`, `<h1>` - `<h6>`, `<ul>`, `<ol>`, `<table>`, `<pre>` |
+| `headingtheme` | Apply custom heading styles using a theme prefix. [Learn More.](/documentation/design/advanced-features/html.md#heading-elements) | `{d.value:html(headingtheme:custom-)}` | `<h1>` - `<h6>` |
+| `tabletheme` | Apply custom table style (DOCX only). [Learn more.](/documentation/design/advanced-features/html.md#table-element) | `{d.value:html(tabletheme:GridTable2)}` | `<table>` |
+| `quotetheme` | Apply a paragraph style of the template to quotes, instead of the default indentation. [Learn more.](/documentation/design/advanced-features/html.md#quote-element) | `{d.value:html(quotetheme:Quote)}` | `<blockquote>` |
+
+**Note:** Options can be combined by separating them with commas, e.g., `{d.value:html(nospace,headingtheme:custom-)}`
+
+## CSS Styles
+
+The `:html` formatter supports inline CSS styling via the style attribute on HTML elements. A style applied to the Carbone tag takes priority over the same property defined in the HTML content, learn more on [Style Inheritance](/documentation/design/advanced-features/html.md#style-inheritance).
+
+**Example of inline style attributes**  
+
+```html
+<p style="color:green;background-color:#FF00FF"><b>OK</b></p> 
+```
+
+**Supported CSS Properties**  
+Text and background colors:
+
+-   `color`: Text color
+-   `background-color`: Background color, except on `<mark>` which always renders a yellow highlight
+-   **Note**: Additional CSS properties will be supported in future releases.
+
+Page breaks ([Learn More](/documentation/design/advanced-features/html.md#page-breaks)):
+
+-   `break-before="page"`: Insert a page break before the paragraph
+-   `break-after="page"`: Insert a page break after the paragraph
+
+**Not supported**  
+External stylesheets, `<style>` elements, CSS classes, and IDs are ignored.
+
+**Supported Color Formats**
+
+| Format | Description | Examples |
+| --- | --- | --- |
+| **Hexadecimal** | Six-digit hex notation (RGB) | `#FF00BB`, `#faebd7` |
+| **RGB** | Red, green, blue values (0-255) | `rgb(31 120 50)`, `rgb(31,120,50)` |
+| **HSL** | Hue, saturation, lightness | `hsl(120deg 75% 25%)`, `hsl(120 75 25)`, `hsl(120,75,25)` |
+| **Named colors** | CSS color keywords | `red`, `blue`, `lightseagreen` ([full list](https://www.w3.org/wiki/CSS/Properties/color/keywords)) |
+
+## Page Breaks
+
+The `:html` formatter supports CSS page break properties to control pagination. Page break properties currently apply only to Paragraph Elements (`<p>`).
+
+**Enabling Page Break Support**  
+
+This is a beta feature since version [5.2.0](/changelog.md#v5-2-0). To enable this functionality, add the following pre-release tag to your template: `{o.preReleaseFeatureIn=5002000}`. Without this tag, page break styles are ignored.
+
+**Example Usage**  
+
+```html
+<!-- Page break before paragraph -->
+<p style="break-before: page;">This paragraph starts on a new page</p>
+
+<!-- Page break after paragraph -->
+<p style="break-after: page;">This paragraph ends the page</p>
+```
+
+## Style Inheritance
+
+HTML content automatically inherits the styles applied to the Carbone tag, where it's inserted. For example, if you apply "Noto Sans" font at 20px to a Carbone tag, e.g. `{d.content:html}`, the injected HTML content will render using "Noto Sans" at "20px".
+
+**Inherited styles**  
+
+-   Font family and font size
+-   Text color
+-   Background color
+-   Text alignment
+-   Text direction (RTL)
+
+**Priority**  
+
+A style applied to the Carbone tag takes priority over the same property defined in the HTML content. If the tag does not define the property, the CSS provided in the HTML content applies, e.g. `<p style="color:green">`.
+
+## Paragraph Handling
+
+When the HTML tag is placed inside a paragraph and mixed with other content, the content will be pushed into a new paragraph above or below the rendered HTML, e.g. [HTML Usage](#usage). Use the **inline** mode, to inject the HTML inside a paragraph.
+
+**Inline Option Example**  
+
+```cdata
+{
+  "value" : "<b>The text is injected within the current paragraph</b>",
+}
+```
+
+```ctemplate
+After
+
+Beginning - {d.value:html(inline)} - End
+
+Before
+```
+
+```cresult
+After
+
+Beginning - <b>The text is injected within the current paragraph</b> - End
+
+Before
+```
+
+## Spacing Behaviors
+
+An empty paragraph is automatically injected after each paragraph, heading, list, table and preformatted block (`<pre>`). It mimics the bottom padding applied by default by web browsers on these elements. Use the **nospace** option to remove the empty paragraph, and therefore the space, e.g. `{d.content:html(nospace)}`.
+
+**Nospace Option Example**  
+
+```cdata
+{
+  "name" : 'Banana',
+  "description" : '<p><b>is an elongated, edible fruit</b></p>'
+}
+```
+
+```ctemplate
+The famous fruit {d.name} {d.description:html(nospace)}, botanically a berry.
+```
+
+```cresult
+The famous fruit Banana
+<b>is an elongated, edible fruit</b>
+, botanically a berry.
+```
+
+## Entities
+
+The `:html` formatter supports the following entity formats:
+
+-   **Named entities**: `&amp;`, `&copy;`, `&nbsp;`, etc.
+-   **Decimal numeric entities**: `&#169;`, `&#128512;`
+-   **Hexadecimal numeric entities**: `&#xA9;`, `&#x1F600;`
+
+Emoji characters are supported as literal Unicode or as numeric entities.
+
+## Tabs
+
+Use the character entities `&ensp;` or `&emsp;` to create a tab. Avoid using `&#9;`, as HTML parsers will collapse it into a single space due to the whitespace collapse principle. To control tab spacing in text editors:
+
+-   LibreOffice: Select the paragraph where the HTML formatter is > Right Click > Click on "Paragraph" > Paragraphs… > Click on the "Tabs" tab > Define a position value in inches > Save.
+-   MS Word: Select the paragraph where the HTML formatter is > Right Click > Paragraph > Click on the "Tabs…" button at the bottom of the menu > Change the default stops or add a new tab stop > Save by clicking on "OK".
+
+## Formatting Elements
+
+| Element | Rendering | Availability |
+| --- | --- | --- |
+| `<b>`, `<strong>` | Bold |   |
+| `<i>`, `<em>` | Italic |   |
+| `<u>` | Underline |   |
+| `<s>`, `<del>` | Strikethrough |   |
+| `<sup>` | Superscript | Pre-release |
+| `<sub>` | Subscript | Pre-release |
+| `<mark>` | Yellow highlight (fixed color, not customizable) | Pre-release |
+| `<code>`, `<kbd>`, `<samp>` | Monospaced font (Courier New) | Pre-release |
+
+**Pre-release**: add `{o.preReleaseFeatureIn=5011000}` to your template to enable these elements; without it, their content is rendered without formatting.
+
+## Structure Elements
+
+| Element | Rendering | Availability |
+| --- | --- | --- |
+| `<p>` | Paragraph |   |
+| `<br>` | Line break |   |
+| `<pre>` | Preformatted text: monospaced font (Courier New), line breaks kept. With the [`inline`](/documentation/design/advanced-features/html.md#paragraph-handling) option, line breaks become single spaces. | Pre-release |
+| `<hr>` | Horizontal rule, with a `0.5em` space above and below it, like a web browser. | Pre-release |
+
+**Pre-release**: add `{o.preReleaseFeatureIn=5011000}` to your template to enable `<pre>` and `<hr>`; without it, the content of a `<pre>` is rendered without formatting, and a `<hr>` is ignored.
+
+A blank paragraph is added after block elements such as `<p>` and `<pre>`, see [Spacing Behaviors](/documentation/design/advanced-features/html.md#spacing-behaviors).
+
+## List Elements
+
+`<ul>`, `<ol>` and `<li>` render as native bulleted and numbered lists in DOCX and ODT documents. No pre-release tag is required.
+
+| Element | Rendering |
+| --- | --- |
+| `<ul>` | Unordered list (bulleted) |
+| `<ol>` | Ordered list (numbered) |
+| `<li>` | List item |
+
+A blank paragraph is added after the list, see [Spacing Behaviors](/documentation/design/advanced-features/html.md#spacing-behaviors).
+
+## Checkbox Element
+
+`<input type="checkbox">` renders a checkbox. It is mainly used for task lists, as generated by Markdown converters, WYSIWYG editors and AI assistants.
+
+A checkbox is ticked with the HTML `checked` attribute, in any of its forms (`checked`, `checked=""`, `checked="checked"`), and unticked without it.
+
+```html
+<ul>
+  <li><input type="checkbox" checked> Design the template</li>
+  <li><input type="checkbox"> Generate the report</li>
+</ul>
+```
+
+**Rendering**  
+
+| Context | Rendering |
+| --- | --- |
+| DOCX opened in Microsoft Word | The checkbox stays clickable. |
+| ODT, PDF, and a DOCX opened in another editor | The checkbox is rendered as a character, `☒` when ticked and `☐` otherwise. It is not clickable. |
+| List item | Like a web browser, the bullet or the number of a task item is not rendered. |
+| Other input types | Only `<input type="checkbox">` is rendered, all the other input types are ignored. |
+
+**Pre-release**: add `{o.preReleaseFeatureIn=5011000}` to your template to enable checkboxes; without it, the tag is ignored.
+
+## Quote Element
+
+`<blockquote>` renders a quotation.
+
+**Default indentation**  
+
+Like a web browser, a quote is indented by `40px`. The indentation is cumulative on each nesting level, and it is added to the indentation of a list when the quote is inside a list item.
+
+```html
+<blockquote>The first level is indented by 40px.
+  <blockquote>The second level is indented by 80px.</blockquote>
+</blockquote>
+```
+
+**Custom Quote Theme**  
+
+The **quotetheme** option applies a paragraph style of the template to the quotes, instead of the default indentation: `{d.content:html(quotetheme:Quote)}`. It works like the [`tabletheme`](/documentation/design/advanced-features/html.md#table-element) and [`headingtheme`](/documentation/design/advanced-features/html.md#heading-elements) options.
+
+Microsoft Word and LibreOffice Writer both provide a `Quote` and an `Intense Quote` paragraph style by default. Any other paragraph style defined in the template can be used.
+
+> ℹ️ **Note:** In ODT templates, a style name containing a space must be written the way ODT stores it: `Intense Quote` becomes `Intense_20_Quote`, e.g. `{d.content:html(quotetheme:Intense_20_Quote)}`.
+
+**Pre-release**: add `{o.preReleaseFeatureIn=5011000}` to your template to enable `<blockquote>`; without it, the tag is ignored.
+
+## Hyperlink Element
+
+Use `<a href="URL">link text</a>` to insert a hyperlink. Only the `href` attribute is used; others (such as `target`) are ignored.
+
+Carbone validates the URL before injecting it:
+
+-   The `http://` or `https://` protocol is optional; `https://` is prepended when it is missing.
+-   A domain and a top-level domain are required (for example `carbone.io`).
+
+An invalid URL is replaced with the default error URL `https://carbone.io/documentation.html#hyperlink-validation`. To set your own fallback, chain the [`:defaultURL`](/documentation/design/advanced-features/hyperlinks.md#defaulturl-url) formatter before `:html`:
+
+```text
+{d.content:defaultURL('https://carbone.io'):html}
+```
+
+## Image Element
+
+Embed images in documents using the `<img>` tag. The source and sizing attributes are required:
+
+-   Source: The image source attribute can be a URL or Data-URL, such as `<img src="https://carbone.io/img/favicon.png"/>` or `<img src="data:image/jpeg;base64,/9j...."/>`
+-   Sizing: The image size is determined by the `width` and `height` attributes provided in the HTML tag, such as `<img src="" width="300" height="100"/>`. These values must be in pixels. If the `width` or `height` attributes are missing, a default size of 5 cm (1.96 inches) is applied while retaining the image's aspect ratio.
+
+## Table Element
+
+HTML table elements enable structured data presentation with rows, columns, and cell spanning in both DOCX and ODT formats.
+
+**Enabling Table Support**  
+
+This is a beta feature since version [5.2.0](/changelog.md#v5-2-0). To enable this functionality, add the following pre-release tag to your template: `{o.preReleaseFeatureIn=5002000}`. Without this tag, table content renders as a single paragraph.
+
+**Supported Elements and Attributes**  
+
+Structural elements:
+
+-   Table container `<table>`, Table rows `<tr>`, Header cells `<th>`, Data cells `<td>`.
+-   Cell spanning: Merge cells horizontally `colspan` attribute, and vertically `rowspan` attribute.
+
+Not supported: `<tbody>`, `<thead>`, `<caption>` - These elements are ignored during conversion.
+
+**Dimensions**  
+
+Tables render at 100% of document body width with columns distributed evenly by default.
+
+A blank paragraph is added after the table, see [Spacing Behaviors](/documentation/design/advanced-features/html.md#spacing-behaviors).
+
+**Custom Theme**  
+
+Tables use the "TableGrid" style (black solid borders) unless customized. Custom themes are available only for DOCX templates. It is not available for ODT templates due to technical format constraints.
+
+There are 2 solutions to provide a theme, in priority order:
+
+1.  Explicit theme via `tabletheme` option: `{d.content:html(tabletheme:GridTable2-Accent3)}`
+2.  Define a Document default theme (if set in template) in Microsoft Word:
+    -   Insert a temporary table in your DOCX template
+    -   Go to Table Design tab
+    -   Right-click a theme → Set as Default → This Document Only
+    -   Delete the temporary table and save
+    -   The generated table will take the default table theme!
+3.  Default theme: "TableGrid" (used if no other theme is specified).
+
+## Heading Elements
+
+The HTML heading elements (`<h1>`, `<h2>`, `<h3>`, `<h4>`, `<h5>`, `<h6>`) enable semantic document structure and support automatic table of contents generation in both DOCX and ODT formats.
+
+**Enabling Heading Support**  
+
+This is a beta feature since version [5.2.0](/changelog.md#v5-2-0). To enable this functionality, add the following pre-release tag to your template: `{o.preReleaseFeatureIn=5002000}`. This feature flag also enables Table HTML Element support. Without this tag, heading content renders as plain paragraphs
+
+**Document Heading Mapping**
+
+HTML headings map to document styles with preserved semantic structure:
+
+| HTML | DOCX/ODT Style | Use Case |
+| --- | --- | --- |
+| `<h1>` | Heading1 | Main title, chapter titles |
+| `<h2>` | Heading2 | Major sections |
+| `<h3>` | Heading3 | Subsections |
+| `<h4>` | Heading4 | Sub-subsections |
+| `<h5>` | Heading5 | Detailed breakdowns |
+| `<h6>` | Heading6 | Lowest level headings |
+
+**Custom Heading Themes**  
+
+Apply custom styling to headings using the **headingtheme** option: `{d.content:html(headingtheme:theme-custom-)}`. This tells Carbone to use your custom styles (`theme-custom-1`, `theme-custom-2`, etc.) instead of the default heading styles. The formatter automatically appends the heading level (1-6) to your prefix. To create custom heading styles in your document editor:
+
+Microsoft Word:
+
+1.  Home → Styles pane → New Style
+2.  Set "Name" to `theme-custom-1` (or theme-custom-2, etc.) **Note:** Missing styles fall back to defaults.
+3.  Set "Style" based on to the corresponding default heading (`Heading 1`, `Heading 2`, etc.)
+4.  Customize formatting, font, sizing, colors, and click OK.
+5.  Use in template: `{d.content:html(headingtheme:theme-custom-)}`
+
+LibreOffice Writer:
+
+1.  Press F11 (or Format → Styles) → Right-click Headings → New
+2.  Set Name to `theme-custom-1` (or `theme-custom-2`, etc.) **Note:** All heading levels (1-6) must have corresponding styles, or rendering will fail.
+3.  Set Inherit from to the corresponding default heading (Heading 1, Heading 2, etc.)
+4.  Customize formatting, font, sizing, colors, in the Font tab and click OK.
+5.  Use in template: `{d.content:html(headingtheme:theme-custom-)}`
+
+**Headings Limitations**  
+
+For DOCX Templates Only: Heading elements within list items (`<ul>`, `<ol>`) are converted to styled text with list formatting rather than semantic headings, due to Microsoft Word format constraints.
+
+## Inject HTML in HTML
+
+The `:html` formatter allows you to inject raw HTML content into [HTML templates](/documentation/design/template-formats/html.md) without encoding, preserving all tags and CSS styles. Example template:
+
+```html
+<html>
+  <body>
+    <h3 style="font-size:15px">Customer Testimonials</h3>
+    {d.content:html}
+    <p>This is additional content around the injected HTML.</p>
+  </body>
+</html>
+```
+
+Learn more: [HTML templates documentation](/documentation/design/template-formats/html.md#inject-html-in-html).
+
+## Inject HTML in Markdown
+
+The `:html` formatter allows you to inject raw HTML content into [Markdown templates](
