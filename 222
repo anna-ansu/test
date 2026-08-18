@@ -1,0 +1,592 @@
+Carbone logo
+Design
+
+HTML templates
+Generate pixel-perfect PDFs from HTML and CSS templates with built-in dynamic data injection, loops, conditions, charts, barcodes, and custom headers/footers. Ideal for invoices, reports, certificates, and contracts.
+COMMUNITY FEATURE Available for:
+ Carbone Cloud
+ Carbone On-premise
+ Embedded Carbone JS  v5.0+ 
+
+ Documentation
+Design
+Template Formats
+html
+Documentation
+Overview
+Getting started
+Template feature
+Version lifecycle
+Design best practices
+Font support
+Philosophy
+In-template options
+Substitutions
+The basics
+Array search
+Aliases
+Repetitions
+With arrays
+With objects
+Sorting
+Filtering
+Grouping
+Distinct
+Lookup
+Formatters
+Overview
+Text
+Number
+Currency
+Date
+Interval
+Array
+Conditions
+Overview
+Inline conditions
+Conditional blocks
+Smart conditions
+Computation
+Simple Mathematics
+Aggregation
+Store and transform
+Advanced features
+Pagination
+Pictures
+Colors
+HTML
+Charts
+Barcode
+Hyperlinks
+Forms
+Translations i18n
+Key-value mapping
+Transform
+File operations
+Signatures
+Template Formats
+html
+Markdown
+PDF
+Carbone supports HTML as both an input template and an output format, enabling you to generate PDFs that render exactly as they do in a browser directly from HTML and CSS using a Chromium-based rendering engine. Unlike tools that only convert HTML to PDF, Carbone is a full template engine: inject JSON data, loop over arrays, apply conditions, format dates and currencies, and generate professional documents — invoices, reports, certificates, contracts — all in a single API call, without a separate templating layer.
+
+Basic
+Carbone needs 2 elements to generate a document:
+
+JSON data: coming from your application / database / API (e.g. the following JSON)
+An HTML Template: made from an existing website, email, or from your code editor. The following template includes Carbone tags: the {d.user.firstName}, {d.user.lastName}, {d.user.email}, and {d.user.membershipLevel}. These tags will be replaced with the corresponding values from the JSON data.
+The d in {d.user.firstName} refers to the root of your JSON data. The path after d (e.g., user.firstName) must match the structure of your JSON. You can use any valid HTML structure; Carbone will only replace the tags with the corresponding data.
+
+data
+{
+  "user": {
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@carbone.io"
+  },
+  "membershipLevel": "Premium"
+}
+template
+ <!DOCTYPE html>
+ <html>
+    <head>
+        <title>Welcome Email </title>
+    </head>
+    <body>
+        <h1>Welcome, {d.user.firstName} {d.user.lastName}! </h1>
+        <p>Thank you for registering with us. </p>
+        <p>Your email address is: {d.user.email} </p>
+        <p>Your membership level: {d.membershipLevel} </p>
+    </body>
+ </html>
+result
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome Email</title>
+    </head>
+    <body>
+        <h1>Welcome, John Doe!</h1>
+        <p>Thank you for registering with us.</p>
+        <p>Your email address is: john.doe@carbone.io</p>
+        <p>Your membership level: Premium </p>
+    </body>
+</html>
+Loops
+Loops in Carbone allow you to repeat a section of your template for each item in an array from your JSON data. This is useful for generating lists, tables, images, or any repeated content dynamically.
+
+A loop in Carbone requires two tags:
+
+Start Tag: Marks the beginning of the repeated block (e.g., {d.users[i].id}). The i is the loop iterator (automatically managed by Carbone).
+End Tag: Marks the end of the repeated block (e.g., {d.users[i+1]}). The end tag i+1 does not refer to an actual array item but signals the end of the pattern.
+All content (text, Carbone tags, HTML, and styles) between the start and end tags is repeated.
+
+data
+{
+  "users": [
+    { "id": 1, "name": "Alice", "role": "Admin" },
+    { "id": 2, "name": "Bob", "role": "Editor" },
+    { "id": 3, "name": "Charlie", "role": "Viewer" }
+  ]
+}
+template
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>User List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Start of loop -->
+            <tr>
+                <td>{d.users[i].id}</td>
+                <td>{d.users[i].name}</td>
+                <td>{d.users[i].role}</td>
+            </tr>
+            <!-- End of loop -->
+            <tr>
+                <td>{d.users[i+1]}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+<body>
+    <h1>User List</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>Alice</td>
+                <td>Admin</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Bob</td>
+                <td>Editor</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Charlie</td>
+                <td>Viewer</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+Unlike traditional programming, Carbone loops do not require keywords like "for" or "foreach". The loop is defined implicitly by the tags.
+Conditions
+Three methods are available to conditionally show, hide, or style elements in your HTML templates. Each method is suited to different use cases, depending on the complexity of your conditions and the structure of your content:
+
+Inline CSS/HTML Conditions: Simple, and granular control over individual HTML/CSS elements. Use when you need to show/hide a single HTML element or CSS properties/attributes based on a data field.
+Smart conditions: Use :drop() or :keep() formatters for removing or retaining entire elements, such as: tables, columns, rows, paragraphs, divs, or spans.
+Conditional Blocks: Use :showBegin/showEnd or :hideBegin/hideEnd for showing or hiding large sections of content, including multiple elements, paragraphs, tables, or pages.
+Inline HTML/CSS Conditions
+Carbone allows you to dynamically inject CSS styles into your HTML templates using conditional logic and data fields. This is useful for showing/hiding elements or applying styles based on your dataset. Carbone supports the following conditional techniques:
+
+Inject CSS Values: Use Carbone’s inline conditions to dynamically set CSS property values (such as display, visibility, or opacity) based on your data.
+Inject CSS Properties: You can inject entire CSS properties from your dataset.
+Inject Style Attribute: Inject a full style attribute from a data field.
+Inject HTML Blocks: Use the :html formatter to inject raw HTML strings from your dataset with conditions.
+Inject CSS Values Example
+In the following example, the display, visibility, and opacity properties are conditionally set using Carbone tags:
+
+The <div> element is hidden if d.showDiv is false.
+The <p> element is hidden if d.showParagraph is false.
+The <span> element is invisible if d.showSpan is false.
+data
+{
+    "display": "none",
+    "showDiv": false,
+    "showParagraph": false,
+    "showSpan": false
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- Inject CSS values -->
+        <div style="display:{d.display};">This element is hidden and takes no space, only if 'showDiv' is 'true'.</div>
+
+        <!-- Inject CSS values based on conditions -->
+        <div style="display:{d.showDiv:ifEQ(true):show('block'):elseShow('none')};">This element is hidden and takes no space, only if 'showDiv' is 'false'.</div>
+        <p style="visibility:{d.showParagraph:ifEQ(true):show('visible'):elseShow('hidden')};"> This paragraph is hidden but occupies space, only if 'showParagraph' is 'false'.</p>
+        <span style="opacity:{d.showSpan:ifEQ(true):show('1'):elseShow('0')};">This element is invisible but still clickable, only if the 'showSpan' is 'false'.</span>
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- Inject CSS values -->
+        <div style="display:none;">This element is hidden and takes no space, only if 'showDiv' is 'true'.</div>
+
+        <!-- Inject CSS values based on conditions -->
+        <div style="display:none;">This element is hidden and takes no space, only if 'showDiv' is 'true'.</div>
+        <p style="visibility:hidden;"> This paragraph is hidden but occupies space, only if 'showParagraph' is 'false'. </p>
+        <span style="opacity:0;">This element is invisible but still clickable, only if the 'showSpan' is 'false'.</span>
+    </body>
+</html>
+Inject CSS Properties Example
+This example demonstrates how to dynamically inject entire CSS properties into an HTML element using Carbone tags. Two methods are available:
+
+Direct Injection: The first <img> tag injects the value of d.imageStyle directly into its style attribute.
+Conditional Injection: The second <img> tag uses a condition to determine which CSS property to apply, either the value of d.imageStyle or a static string "display:block".
+data
+{
+    "showImage": true,
+    "imageStyle": "display: none;"
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- Inject CSS properties -->
+        <img src="image.jpg" style="width: 150px;{d.imageStyle}border-radius: 8px;" alt="Hidden Image">
+
+        <!-- Inject CSS properties based on a condition -->
+        <img src="image.jpg" style="{d.showImage:ifEQ(true):show('display:block;'):elseShow(d.imageStyle)}" alt="Visible Image">
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- Inject CSS properties -->
+        <img src="image.jpg" style="width: 150px;display: none;border-radius: 8px;" alt="Hidden Image">
+
+        <!-- Inject CSS properties based on a condition -->
+        <img src="image.jpg" style="display:block;" alt="Visible Image">
+    </body>
+</html>
+Inject Style Attribute Example
+This example shows how to inject an entire style attribute from your dataset into an HTML element.
+
+Direct Injection: The first button uses the style defined in d.buttonStyles1.
+Conditional Injection: The second button applies the value of d.buttonStyles1 if d.buttonTheme is "forest", otherwise it uses the value of d.buttonStyles2.
+data
+{
+    "buttonTheme": "ocean",
+    "buttonStyles1": "style="background-color: green;color: white;border: none;"",
+    "buttonStyles2": "style="background-color: black;color: red;border: 1px solid white;""
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- 3. Inject CSS Style Attribute -->
+        <button {d.buttonStyles1}>Click Me</button>
+        <!-- Inject CSS Style Attribute based on a condition -->
+        <button {d.buttonTheme:ifEQ('forest'):show(d.buttonStyles1):elseShow(d.buttonStyles2)}>Click Me</button>
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- 3. Inject CSS Style attribute -->
+        <button style="background-color: green;color: white;border: none; >Click Me</button>
+        <!-- Inject CSS Style Attribute based on a condition -->
+        <button style="background-color: black;color: red;border: 1px solid white;">Click Me</button>
+    </body>
+</html>
+Inject HTML Block
+This example demonstrates how to inject raw HTML blocks from your dataset into your template using conditions and the :html formatter.
+
+Direct Injection: The first line directly renders the HTML stored in d.noteSection.
+Conditional Injection: The second line conditionally renders either d.noteSection if d.displayNote is true, or d.nothingSection if false.
+data
+{
+    "displayNote": false,
+    "noteSection": "<div style='border-left: 3px solid #ff9800; padding: 8px;'><strong>Note:</strong> Maintenance at 2 AM UTC.</div>",
+    "nothingSection": "<strong style='text-align: center; padding: 10px; background: #f0f8ff;'>Nothing Significant To Report.</strong>"
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- Inject HTML Block -->
+        {d.noteSection:html}
+
+        <!-- Inject HTML Block based on a condition -->
+        {d.displayNote:ifEQ(true):show(d.noteSection):elseShow(d.nothingSection):html}
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <!-- Inject HTML Block -->
+        <div style='border-left: 3px solid #ff9800; padding: 8px;'><strong>Note:</strong> Maintenance at 2 AM UTC.</div>
+
+        <!-- Inject HTML Block based on a condition -->
+        <strong style='text-align: center; padding: 10px; background: #f0f8ff;'>Nothing Significant To Report.</strong>
+    </body>
+</html>
+Drop / Keep
+The :drop() and :keep() formatters allow you to conditionally remove or retain elements (such as tables, rows, or paragraphs) in your HTML templates. These formatters are especially useful for dynamic content generation, where you want to show or hide elements based on data conditions. Syntax:
+
+:drop(element) : Removes the element if the condition is true.
+:keep(element) : Retains the element if the condition is true.
+Element	Description	Tag Position	Example
+p	Drop/keep a paragraph	Within a paragraph	{d.text:ifEM:drop(p)}
+row	Drop/keep a table row	Inside a table cell	{d.condition:ifNE(value):keep(row)}
+col	Drop/keep an entire table column	In any cell of the target column	{d.condition:ifEQ(value):drop(col)}
+table	Drop/keep an entire table	Within a table row	{d.condition:ifEQ(value):drop(table)}
+div	Drop/keep a div block	Within a div element	{d.condition:ifEQ(value):drop(div)}
+span	Drop/keep a span element	Within a span element	{d.condition:ifEQ(value):drop(span)}
+Notes
+
+For paragraphs and rows, you can specify a second parameter to drop/keep the next N elements (e.g., :drop(p, 3)). This is not supported for col.
+No Chaining: Do not chain other formatters after :drop() or :keep().
+HTML-Specific: Only table, col, row, p, div, and span elements are supported in HTML templates.
+Clean Output: The Carbone tag is removed from the final report.
+Drop a Table Example
+data
+{
+  "showTable": false,
+  "list": [
+    {
+      "name": "Model 5"
+    },
+    {
+      "name": "Model 3"
+    },
+    {
+      "name": "Falcon Heavy"
+    }
+  ]
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <table>{d.showTable:ifEQ(false):drop(table)}
+            <tr><td>{d.list[i].name}</td></tr>
+            <tr><td>{d.list[i+1].name}</td></tr>
+        </table>
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+    </body>
+</html>
+Drop a Table Row Example
+data
+[
+  { "name": "Falcon 9" },
+  { "name": "Model 5" },
+  { "name": "Model 3" },
+  { "name": "Falcon Heavy" }
+]
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <table>
+            <tr><td>{d[i].name}{d[i].name:ifIN('Falcon'):drop(row)}</td></tr>
+            <tr><td>{d[i+1].name}</td></tr>
+        </table>
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <table>
+            <tr><td>Model 5</td></tr>
+            <tr><td>Model 3</td></tr>
+        </table>
+    </body>
+</html>
+Drop a Paragraph Example
+data
+{ "text": "" }
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>{d.text}{d.text:ifEM:drop(p, 2)}This paragraph and the next one will be dropped if 'text' is empty.</p>
+        <p>This paragraph will also be dropped.</p>
+        <p>This paragraph will remain.</p>
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>This paragraph will remain.</p>
+    </body>
+</html>
+Conditional Sections
+The pair of :showBegin/:showEnd and :hideBegin/;hideEnd formatters allow you to conditionally display a section of content in your HTML templates. These formatters are useful when you want to show/hide whole pages or groups of text, tables, or other elements based on data conditions. Syntax:
+
+:showBegin or :hideBegin: Marks the start of a block to show/hide if the condition is true.
+:showEnd or hideEnd: Marks the end of the block.
+showBegin / showEnd Example
+The details section containing a list is hidden using the showBegin/showEnd formatters, only if the showDetails field is true.
+
+data
+{
+  "showDetails": false,
+  "product": "Carbone Pro"
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>Product: {d.product}</p>
+        {d.showDetails:ifEQ(true):showBegin}
+        <p>Details:</p>
+        <ul>
+            <li>Feature 1</li>
+            <li>Feature 2</li>
+        </ul>
+        {d.showDetails:ifEQ(true):showEnd}
+        <p>Thank you for using Carbone!</p>
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <p>Product: Carbone Pro</p>
+        <p>Thank you for using Carbone!</p>
+    </body>
+</html>
+hideBegin / hideEnd Example
+The greetings section is deleted when the field name is undefined/null/empty.
+
+data
+{
+  "name": null
+}
+template
+<!DOCTYPE html>
+<html>
+    <body>
+        <h2> Dashboard </h2>
+        {d.name:ifEM:hideBegin}
+        <strong style='margin: 0; font-size: 14px;'>
+            Welcome {d.name}!
+        </strong>
+        {d.name:ifEM:hideBegin}
+    </body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+    <body>
+        <h2> Dashboard </h2>
+    </body>
+</html>
+Pictures
+Dynamic pictures allow you to inject images into your documents dynamically using data from your JSON input. For HTML templates, use the <img> tag with the src attribute pointing to one of the following:
+
+Absolute URLs (e.g., https&#58;//carbone.io/img/carbone-logo.svg). Carbone does not support relative paths (e.g., /images/logo.png or ../assets/photo.jpg).
+Data-URIs (Base64 encoded, e.g., data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD...).
+data
+{
+  "userProfile": {
+    "name": "John Doe",
+    "profilePictureUrl": "https://carbone.io/images/john-doe.jpg",
+    "profilePictureBase64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD..."
+  }
+}
+template
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>Welcome, {d.userProfile.name}!</h1>
+    <div>
+        <img src="{d.userProfile.profilePictureUrl}" alt="Profile Picture" style="width:200px; height:auto;"/>
+    </div>
+</body>
+</html>
+result
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>Welcome, John Doe!</h1>
+    <div>
+        <img src="data:image/jpg...IMAGE BASE 64" alt="Profile Picture" style="width:200px; height:auto;"/>
+    </div>
+</body>
+</html>
+To change the dimensions or scaling of an image, you can use HTML attributes or CSS styling for more control and responsiveness:
+
+Set fixed dimensions directly in the <img> tag, e.g., <img src="{d.imageUrl}" width="300" height="200" alt="Dynamic Image">.
+Use CSS for sizing and changing aspect ratios. Inline styles can be used directly within your HTML tags: <img src="{d.imageUrl}" style="width:300px; height:auto;" alt="Dynamic Image">.
+Charts
+Use the :chart formatter to dynamically inject charts into HTML templates: embed a Carbone tag in the src attribute of an <img> tag.
+
+data
+{
+    "chartOptions": {
+        "type": "echarts@v5a",
+        "width": 600,
+        "height": 400,
+        "theme": null,
+        "option": {
+            "xAxis": {
+                "type": "category",
+                "data": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+            },
+            "yAxis": {
+                "type": "value"
+            },
+            "series": [{
+                "data": [150, 230, 224, 218, 135, 147, 260],
+                "type": "line"
+            }]
+        }
+    }
+}
+template
+<html>
+    <body>
+        <div class="chart-container">
+            <h2 class="chart-title">Sales Overview</h2>
+            <img src="{d.chartOptions:chart}" alt="Chart Image" width="600" height="400">
+        </div>
+    </body>
+</html>
+result
+<html>
+    <body>
+        <div class="chart-container">
+            <h2 class="chart-title">Sales Overview</h2>
+            <img src="data:image/svg+xml CHART BASE 64" alt="Chart Image" width="600" height="400">
+        </div>
+    </body>
+</html>
+In this example, the {d.chartOptions:chart} tag is replaced with an SVG image of the chart, which is dynamically generated based on the data provided in your dataset.
+
+Key points:
+
+Supported ECharts Version: Carbone supports echarts@v5 (default) and echarts@v5a (optimized for SVG compatibility).
+Styling: Chart styling must
