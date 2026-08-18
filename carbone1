@@ -1,0 +1,115 @@
+---
+source: https://carbone.io/documentation/design/substitutions/the-basics.html
+title: "Learn how to use a simple Carbone placeholder tag"
+description: "Learn how to use a simple Carbone placeholder tag"
+generated_at: "2026-08-15"
+---
+
+# The basics
+
+Learn how to use a simple Carbone placeholder tag  
+COMMUNITY FEATURE Available for:  
+✓ Carbone Cloud  
+✓ Carbone On-premise  
+✓ Embedded Carbone JS   v1.0+ 
+
+> ℹ️ **Note:** Each part of the documentation shows exactly what happens if you send **Data** (JSON Object) and a **Template** (handmade docx, odt, ...) to Carbone.
+
+## Basic
+
+Carbone tags are placeholders `{d.}` within the template, then they are replaced with data from your JSON dataset. The value can be a string, a number, or a date.
+
+```cdata
+{
+  "firstname": "John",
+  "lastname": "Doe"
+}
+```
+
+```ctemplate
+Hello {d.firstname} {d.lastname} !
+```
+
+```cresult
+Hello John Doe !
+```
+
+## Accessing sub-objects
+
+If a dataset contains sub-objects, Carbone can access them using the Dot Notation to go deeper in the object tree.
+
+```cdata
+{
+  "firstname": "John",
+  "type": {
+    "id": 1,
+    "name": "human"
+  }
+}
+```
+
+```ctemplate
+{d.firstname} is a {d.type.name}
+```
+
+```cresult
+John is a human
+```
+
+## Accessing arrays
+
+When data is an array of objects, you can access directly each object using the **reserved word `i`**, which represents the ith item of the array. Carbone uses zero-based arrays:
+
+-   The first item of an array is `[i=0]` or `[0]`.
+-   The second item of an array is `[i=1]` or `[1]`
+
+An array is reachable using the Square Bracket Notation `[]`.
+
+```cdata
+[
+  { "movie": "Inception" },
+  { "movie": "Matrix" },
+  { "movie": "Back to the future" }
+]
+```
+
+```ctemplate
+Preferred movie are {d[i=1].movie} and {d[2].movie}
+```
+
+```cresult
+Preferred movie are Matrix and Back to the future
+```
+
+Get inspired by one of our real-life examples: [Menu](/examples/menu/index.md) or [Planning](/examples/planification-simple/index.md)
+
+## Parent properties
+
+Access properties of the parent object with two points `..` (or more)
+
+```cdata
+{
+  "country": "France",
+  "movie": {
+    "name": "Inception", 
+    "sub": {
+      "a" : "test"
+    }
+  }
+}
+```
+
+```ctemplate
+{d.movie.sub..name}
+{d.movie.sub...country}
+```
+
+```cresult
+Inception
+France
+```
+
+## Related topics
+
+- [Array search](/documentation/design/substitutions/array-search.md)
+- [Aliases](/documentation/design/substitutions/aliases.md)
