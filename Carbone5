@@ -1,0 +1,77 @@
+Carbone Help Center
+Search our help center...
+Articles on: Tutorials
+How to keep merged rows inside a table loop?
+How to keep merged rows inside a table loop?
+
+
+Carbone can't keep a merged rows when it is mixed with a loop of rows, the column will be transformed as a row on the generated report. This article is about creating a document that contains a table with merged columns mixed with loop of rows, such as:
+
+
+
+Table example with merge rows
+
+
+
+Solution
+
+
+Create a table inside a table, such as:
+
+
+
+Table of 2x2 inside a table of 2x1
+
+
+
+When this table wrapping is created, it may also add some space between table (margin/padding). Follow the below instruction to remove it.
+
+
+
+Removing extra space for MS Word
+
+
+It is possible to remove the margin space between the inner table and the cell, follow these instructions for MS Word:
+
+
+
+Right-click on the table > "properties"
+Select the tab "Table"
+Click on the "Options..." button
+Set the left and right margin at zero
+Save
+
+
+Ms Word - Remove cell margin
+
+
+
+Removing extra space for Libre Office
+
+
+Instructions for Libre Office:
+
+
+
+Right click on the table > "table properties"
+Select the tab "Borders"
+Set the padding at zero
+Save
+
+
+Libre Office - Update table padding
+
+
+
+Finally generate the report with Carbone and merged rows will render as expected, voilà 🎉
+
+Updated on: 09/09/2022
+
+Was this article helpful?YesNo
+Not finding what you are looking for?
+
+Chat with us or send us an email.
+
+Chat with us
+Send us an email
+© 2026Carbone Help Center
