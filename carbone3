@@ -1,0 +1,206 @@
+---
+source: https://carbone.io/documentation/design/advanced-features/pictures.html
+title: "How to integrate dynamic pictures in your template?"
+description: "How to integrate dynamic pictures in your template?"
+generated_at: "2026-08-15"
+---
+
+# Pictures
+
+How to integrate dynamic pictures in your template?  
+ENTERPRISE FEATURE Available for:  
+✓ Carbone Cloud  
+✓ Carbone On-premise  
+✗ Embedded Carbone JS   v3.0+ 
+
+## How to insert picture?
+
+> ℹ️ **Note:** Compatible with PDF, ODT, ODS, ODP, ODG, PPTX, XLSX, and DOCX files.
+
+Dynamic pictures can be a [public URL](#simple-image-odt) or a [Base64 Data URI](#base64-image-odt). For the 2 solutions, a temporary picture has to be inserted in the template and **the tag has to be written as an alternative text**. Finally, during rendering, Carbone replaces the temporary picture by the new picture provided by the tag. The image is resized as 'fillWidth' by default. Learn more about the [imageFit formatter](#how-to-insert-picture-image-aspect-ratio-imagefit) to change the value.
+
+If an error occurs for some reasons (fetch failed, image type not supported), a replacement error image is used.
+
+The place to insert the tag on the temporary picture may change depending on the file format:
+
+-   `ODS`, `ODP` and `ODG` files: set the tag on the image title
+-   `ODT` file: set the tag on the image alternative text, image description
+-   `DOCX` and `XLSX` files: set the tag either on the image title, image description, or alternative text
+
+The accepted image types are `jpeg`, `png`, `gif`, `svg`.
+
+**Limitation:**
+
+When images are positioned absolutely in a document, creating loops with multiple images produces an invalid report in `PPTX`, `XLSX`, `ODP`, and `ODG` files. A new solution using the [transform](transform.md) formatter is coming soon. Please contact us for more information. However, it is still possible to create a loop across two or more slides in `ODP` files.
+
+### Image aspect-ratio `:imageFit`
+
+The `imageFit` formatter determines how the image should be resized to fit its container.  
+An argument must be passed to the formatter:
+
+-   `fillWidth`: The replaced image is resized to fill the element’s content-box width, without changing its aspect ratio.
+-   `contain`: The replaced image is scaled to maintain its aspect ratio while fitting within the element’s content-box (the temporary image).
+-   `fill`: The replaced image is resized to fill the element’s content-box (the temporary image). The entire image will fill the box of the previous image. If the image's aspect ratio does not match the aspect ratio of its box, it will be stretched to fit.
+
+```js
+{d.image:imageFit(contain)}
+// or
+{d.image:imageFit(fill)}
+// or
+{d.image} // 'fillWidth' is set by default
+```
+
+### Image auto-orientation `:autoOrient`
+
+> ℹ️ **Note:** Available since v5.6.0. Compatible with DOCX templates only.
+
+The `:autoOrient` formatter automatically rotates JPEG images based on the EXIF orientation metadata embedded by cameras and smartphones. This ensures images captured on mobile devices appear in the intended orientation, without manual rotation.
+
+```js
+{d.image:autoOrient:imageFit(contain)}
+// or without imageFit (defaults to fillWidth)
+{d.image:autoOrient}
+```
+
+**Notes:**
+
+-   Only JPEG images are rotated. Other image formats (PNG, GIF, SVG) ignore this formatter and render normally.
+-   `:autoOrient` cannot be combined with `imageFit(fill)`. Allowed parameters: `imageFit(contain)` or `imageFit(fillWidth)` instead.
+
+## Simple image \[ODT\]
+
+**Data**
+
+```json
+{
+  "dog": "http://link.to/the/picture"
+}
+```
+
+**Template**
+
+-   Insert a [temporary picture](/img/doc/image-placeholder.png) into the template.
+-   Write the tag `{d.dog}` in the picture's alternative text. In LibreOffice, right-click on the image, go to Properties, and then enter the tag in the Alternative Text field.
+
+![Result with Carbone](/img/doc/image-odt-simple.webp)
+
+Carbone will replace the temporary picture with the one linked in the "dog" data.  
+Finally, after Carbone renders the report, the new image from the URL should appear!
+
+## Loop of images \[ODT\]
+
+It is also possible to display a list of pictures by writing a loop. Here is the template used in the following example:
+
+**Data**
+
+```json
+{
+  "flags": [
+    {
+      "name": "France",
+      "picture": "http://link.to/the/flag-fr"
+    },
+    {
+      "name": "Germany",
+      "picture": "http://link.to/the/flag-de"
+    },
+    {
+      "name": "Italy",
+      "picture": "http://link.to/the/flag-it"
+    }
+  ]
+}
+```
+
+**Template**
+
+-   Insert the repetition tag in the description of the first picture. It is not necessary to repeat the placeholder image for the `[i+1]` tag. Carbone will automatically repeat the image.
+    
+-   Update the anchor type of an image: Right-click on the image > Properties > Type > Anchor and select "As Character".
+    
+    | Anchor Type | Carbone Behavior |
+    | --- | --- |
+    | As Character | This is the best choice: it allows for the replacement of a single image or the creation of a loop of images. |
+    | To Page / To Paragraph / To Character | The image is floating, making it impossible to create a loop of images; only a single image replacement is supported. |
+    
+
+![List of images with carbone template](/img/doc/image-loop-template.webp)
+
+**Result**
+
+Finally, after the Carbone rendering, the list of images appears on the report!
+
+![List of images result](/img/doc/image-loop-result.webp)
+
+## Base64 image \[ODT\]
+
+Before continuing, check out this documentation to learn more about [Data URIs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs).
+
+**Data**
+
+```json
+{
+  "frenchFlagImage": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQABLAEsAAD/4QGERXhpZgAATU0AKgAAAAgACQEPAAIAAAAGAAAAegEQAAIAAAANAAAAgAESAAMAAAABAAEAAAEaAAUAAAABAAAAjgEbAAUAAAABAAAAlgEoAAMAAAABAAIAAAExAAIAAAAUAAAAngEyAAIAAAAUAAAAsodpAAQAAAABAAAAxgAAAABDYW5vbgBDYW5vbiBFT1MgNkQAAAAAASwAAAABAAABLAAAAAFBZG9iZSBQaG90b3Nob3AgNy4wADIwMTc6MTE6MjAgMTE6MzE6MTQAAAmCmgAFAAAAAQAAATiCnQAFAAAAAQAAAUCIJwADAAAAAgDIAACQAwACAAAAFAAAAUiSCgAFAAAAAQAAAVygAQADAAAAAQABAACgAgAEAAAAAQAAAGSgAwAEAAAAAQAAAD6kNAACAAAAFwAAAWQAAAAAAAAAAQAAAFAAAAAEAAAAATIwMTY6MDM6MjYgMTM6MDg6MDcAAAAAaQAAAAFFRjI0LTEwNW1tIGYvNEwgSVMgVVNNAAD/4Qn2aHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLwA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA1LjQuMCI+IDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+IDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiIHhtbG5zOnBob3Rvc2hvcD0iaHR0cDovL25zLmFkb2JlLmNvbS9waG90b3Nob3AvMS4wLyIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiBwaG90b3Nob3A6RGF0ZUNyZWF0ZWQ9IjIwMTYtMDMtMjZUMTM6MDg6MDciIHhtcDpNb2RpZnlEYXRlPSIyMDE3LTExLTIwVDExOjMxOjE0IiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCA3LjAiLz4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8P3hwYWNrZXQgZW5kPSJ3Ij8+AP/tAGBQaG90b3Nob3AgMy4wADhCSU0EBAAAAAAAJxwBWgADGyVHHAIAAAIAAhwCPAAGMTMwODA3HAI3AAgyMDE2MDMyNgA4QklNBCUAAAAAABDW6DtHA0U5WqoLeQsJGPlt/8AAEQgAPgBkAwERAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQICAgICAgICAgICAwMDAwMDAwMDA//bAEMBAQEBAQEBAQEBAQICAQICAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA//dAAQADf/aAAwDAQACEQMRAD8A/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//Q/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//R/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//S/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//T/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//U/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//V/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//W/nfr/twP8vwoAKALFp/x9W3/AF8Q/wDoxazrfwqv+F/ka0P49D/r5H/0pH+lR/wQt/5RQfsbf9iD4h/9WH4xr/lf/aEf8pjeOP8A2MaP/qFhj/QXw5/5IvIv+vcv/Tkz9aK/jM+2CgAoA/lN/wCDiL/kr37MX/ZJ/i9/6nfwsr+KPpdfBw//ANeJ/wDp6kf72fsef+TfeOP/AGPsp/8AUHMz+dGv4WP9jAoAKACgD//Z"
+}
+```
+
+**Template**
+
+-   Insert a temporary picture on the template.
+-   Write the tag `{d.frenchFlagImage}` in the title picture property. To access the title on Libre Office: Right-click on the image > Description > Title.
+
+![Picture from a base64 data URI image](/img/doc/image-ods-template-simple.webp)
+
+After the Carbone rendering, the new image from the data URI should appear on the report!
+
+## Simple image \[DOCX\]
+
+**Data**
+
+```json
+{
+  "image": "http://link.to/you/picture"
+}
+```
+
+Or with base64 URI:
+
+```json
+{
+  "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
+}
+```
+
+**Template**
+
+The first step is to update the alternative text of the image and set the `{d.image}` tag.
+
+![Step 1 Word Dynamic picture](/img/doc/dynamic-picture-word-step1.gif)
+
+**Result**
+
+Then the rendering can be tested in Carbone studio by adding the corresponding value in the JSON data field.
+
+![Step 2 Word Dynamic picture](/img/doc/dynamic-picture-word-step2.gif)
+
+## Loop of images \[DOCX\]
+
+Follow the same instructions as in [Loop of Images in ODT](#loop-of-images-odt).
+
+Update the position type of an image in Word: Right-click -> Size and Position -> Text Wrapping, and select "In Line with Text."
+
+| Position Type | Carbone Behavior |
+| --- | --- |
+| In Line with Text | Best choice: Allows for the replacement of a single image or a loop of images. |
+| Other Wrapping Styles | The image is floating; it is not possible to create a loop of images, only a single image replacement is accepted. |
+
+Get inspired by one of our real-life examples: [Certificate](/examples/certificat/index.md), [Property advertisement](/examples/real-estate-property-description/index.md), [Quote With Datasheet](/examples/quote-with-datasheet/index.md), [Gallery of images](/examples/gallery-simple/index.md) or [Vehicle Inspection Report](/examples/check-out/index.md)
+
+## Related topics
+
+- [Translations i18n](/documentation/design/advanced-features/translations-i18n.md)
+- [Transform](/documentation/design/advanced-features/transform.md)
+- [Digital signatures](/documentation/design/advanced-features/signatures.md)
+- [Pagination](/documentation/design/advanced-features/pagination.md)
+- [Key-value mapping](/documentation/design/advanced-features/key-value-mapping.md)
+- [Hyperlinks](/documentation/design/advanced-features/hyperlinks.md)
