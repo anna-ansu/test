@@ -1,0 +1,129 @@
+Carbone Help Center
+Search our help center...
+Articles on: Tutorials
+How to hide a table row conditionally
+How to hide a table row conditionally
+
+
+Since Carbone v4.3.0, the drop formatter is available to delete table rows and any element from a document. Be sure to request version 4 (or higher) of Carbone:
+
+For the Cloud API: set the header "carbone-version":4
+For the Cloud Studio: Click on the top-right "settings" icon > click on "version" > Select 4.X.X.
+
+
+Learn more about :drop formatter on the documentation
+
+
+Drop one row
+
+
+For the following exemple, the table prints an supply order sheet and the goal is to drop the "order date" if the value empty.
+The tag {d.list[i].orderDate:ifEM:drop(row)} is placed within the "Order date" row, and all the elements it comprises are also removed if the condition is validated. Details:
+
+the d.list[i].orderDate value is a description as a string type coming from the JSON dataset
+the :ifEM is a conditional formatter checking if the value is empty.
+the :drop(row) formatter is fired if the previous condition is true. The first argument row is required to defined the element to remove.
+
+
+ODT template edited with Libre Office
+
+
+
+After generating the PDF, the "order date" row is hidden for the banana element because the JSON dataset provides an empty string for the orderDate attribute.
+
+
+
+PDF generated with Carbone
+
+
+
+Drop multiple rows
+
+
+After following the drop one row tutorial, a comment section is added to the document.
+The goal is to delete the comment section (3 rows), if the comment list is empty on the JSON dataset.
+The tag {d.list[i].comments:ifEM:drop(row, 3)} is placed within the "Order date" row. Details:
+
+the d.list[i].comments value is a list of comments coming from the JSON dataset
+the :ifEM is a conditional formatter checking if the value is empty.
+the :drop(row, 3) formatter is fired if the previous condition is true. The first argument row is required to defined the element, and 3 defines the number of rows to delete.
+
+
+ODT template edited with LibreOffice
+
+
+
+After generating the PDF with Carbone, the comment sections are hidden for all elements except the third one because the JSON dataset provides a comment list with messages.
+
+
+
+PDF generated with Carbone
+
+
+
+JSON dataset
+
+
+{
+  "list": [
+    {
+      "name": "Apple",
+      "quantity": 20,
+      "price": 1,
+      "origin": "France",
+      "img": "https://...",
+      "orderDate": "2022/07",
+      "comments": []
+    },
+    {
+      "name": "Banana",
+      "quantity": 50,
+      "price": 2,
+      "origin": "France",
+      "img": "https://...",
+      "comments": []
+    },
+    {
+      "name": "Grappes",
+      "quantity": 15,
+      "price": 3,
+      "origin": "France",
+      "orderDate": "2022/08",
+      "comments": [
+        {
+          "date": "2022/08/22",
+          "name": "John",
+          "msg": "@Eric is it possible to add more grappes for the next order?"
+        },
+        {
+          "date": "2022/08/23",
+          "name": "Eric",
+          "msg": "Yes sure, let me do that in couple of minutes."
+        },
+        {
+          "date": "2022/08/24",
+          "name": "John",
+          "msg": "Thank you!"
+        }
+      ]
+    },
+    {
+      "name": "Redcurrant",
+      "quantity": 30,
+      "price": 0.5,
+      "orderDate": "2022/09",
+      "origin": "",
+      "img": "https://..."
+    }
+  ]
+}
+Updated on: 03/07/2025
+
+Was this article helpful?YesNo
+Not finding what you are looking for?
+
+Chat with us or send us an email.
+
+Chat with us
+Send us an email
+© 2026Carbone Help Center
