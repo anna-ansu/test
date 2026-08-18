@@ -1,0 +1,120 @@
+---
+source: https://carbone.io/documentation/design/template-formats/pdf.html
+title: "PDF Form Templates | Fill PDF AcroForms with Carbone"
+description: "Use a fillable PDF (AcroForm) directly as a Carbone template, and fill its text fields, checkboxes, and radio buttons from your JSON data."
+generated_at: "2026-08-15"
+---
+
+# PDF templates
+
+Use a fillable PDF (AcroForm) directly as a Carbone template, and fill its text fields, checkboxes, and radio buttons from your JSON data.  
+ENTERPRISE FEATURE Available for:  
+✓ Carbone Cloud  
+✓ Carbone On-premise  
+✗ Embedded Carbone JS   v5.0+  NEW
+
+Carbone can use an existing fillable PDF, an AcroForm such as an official government form, an HR document, or a form built in Adobe Acrobat, directly as a template. Upload the PDF as-is: Carbone reads its form fields and fills them with your JSON data. The template stays a PDF throughout, there is no intermediate conversion step.
+
+> ℹ️ **Note:** This is a **low-level feature to update existing PDF forms**. If you want to design a new form from scratch, with clickable checkboxes and editable text fields, see [Forms](/documentation/design/advanced-features/forms.md): that page covers the ODT-based workflow, which is the fastest way to build a form and export it to PDF. This page is about reusing a PDF form that already exists.
+
+## Prerequisites
+
+-   A PDF that already contains form fields (text fields, checkboxes, radio buttons), created or edited in a tool such as Adobe Acrobat, PDFescape, or LibreOffice Draw.
+-   Carbone v5.0.0 or later, Enterprise Edition (Cloud or On-Premise).
+
+## Three ways to fill a PDF form
+
+### 1\. Carbone tags directly inside a form field
+
+The simplest method: open the field's default value/content in your PDF editor and type a Carbone tag directly, for example `{d.user.firstName}`. Carbone replaces it with the corresponding value from your dataset. Loops are supported inside a text field, so a single field can repeat content for each item of an array.
+
+### 2\. Annotation formatters: fill, check, uncheck
+
+Add a text annotation positioned directly above the field you want to update, and insert a Carbone tag using one of the following formatters. Carbone detects the field behind the annotation, removes the annotation, and updates the field:
+
+| Formatter | Description |
+| --- | --- |
+| `:fill` | Fills the text field behind the tag |
+| `:check` | Checks the checkbox or radio button behind the tag |
+| `:uncheck` | Unchecks the checkbox behind the tag |
+
+```javascript
+{d.myText:fill}                        // fills the text field behind the tag
+{d.myCondition:ifEQ(true):check}       // checks the checkbox/radio button behind the tag
+{d.myCondition:ifEQ(false):uncheck}    // unchecks the checkbox behind the tag
+```
+
+**Note:** The annotation must overlap the target field. If Carbone cannot find a field below the annotation, it returns an error, move the annotation so it fully overlaps the field.
+
+### 3\. Target a field by name: fillField, checkField
+
+Place a Carbone tag anywhere in the PDF, it does not need to sit on top of the field, and target the field directly by its name:
+
+| Formatter | Description |
+| --- | --- |
+| `:fillField('fieldName')` | Fills the text field named `fieldName`. Any non-empty value also checks a checkbox. |
+| `:checkField('fieldName')` | Checks the checkbox or radio option named `fieldName` if the condition is true. |
+
+```javascript
+{d.text:fillField('fieldName')}
+{d.confirm:ifEQ(true):checkField('fieldName')}
+```
+
+To select one option in a group of radio buttons, resolve the option name with a condition and pass it to `:fillField()`:
+
+**Data**
+
+```json
+{ "genre": "boy" }
+```
+
+**Template tag**
+
+```javascript
+{d.genre:ifEQ('boy'):show(male):ifEQ('girl'):show(female):fillField('genderGroup')}
+```
+
+If the resolved option (`male` or `female` above) does not exist in the radio group, Carbone returns an error.
+
+## Known limitations
+
+-   In Carbone Studio, the embedded PDF viewer cannot display filled forms. Uncheck "Use embedded PDF viewer" in the preview panel to see the actual result.
+-   Buttons and other unsupported field types are silently ignored rather than raising an error.
+-   The native macOS Preview app can break PDF forms that contain radio buttons. Test the generated document with Adobe Acrobat Reader or another standards-compliant viewer.
+
+## Generate a document from a PDF template
+
+To fill a PDF form using the Carbone API, follow this workflow:
+
+1.  **Prepare two files**: your fillable **PDF template** (with Carbone tags placed as described above) and a **JSON dataset**.
+2.  **Send a `POST /render/template` request** to the [Carbone API](/documentation/developer/http-api/introduction.md). Since the template is already a PDF and the output should stay a PDF, omit `convertTo`, Carbone only fills the tags and returns the same file, unconverted:
+
+```bash
+curl --location --request POST 'https://api.carbone.io/render/template?download=true' \
+  --header 'carbone-version: 5' \
+  --header 'Content-Type: application/json' \
+  --header 'Authorization: Bearer API_TOKEN' \
+  --data-raw "{
+    "data": {},
+    "template": "$(base64 -i form.pdf)"
+  }" \
+  --output result.pdf
+```
+
+> 💡 **Linux users**: replace `base64 -i form.pdf` with `base64 -w 0 form.pdf`
+
+**Key Parameters**
+
+| Parameter | Description |
+| --- | --- |
+| `template` | Your fillable PDF, encoded as a Base64 string. |
+| `data` | JSON dataset used to fill the form fields. |
+| `?download=true` | Query parameter to download the document as a stream. |
+| `Authorization` | Header required for the Carbone Cloud API. [Get your API key here.](https://account.carbone.io/) |
+
+For more details, refer to the [Carbone API Documentation](/documentation/developer/http-api/introduction.md).
+
+## Related topics
+
+- [Markdown templates](/documentation/design/template-formats/markdown.md)
+- [HTML templates](/documentation/design/template-formats/html.md)
