@@ -1,0 +1,335 @@
+---
+source: https://carbone.io/documentation/developer/http-api/generate-reports.html
+title: "Generate reports"
+description: "HTTP API to merge the data in your template"
+generated_at: "2026-08-15"
+---
+
+# Generate reports
+
+HTTP API to merge the data in your template
+
+## Generate a report
+
+POST /render/{templateId-or-versionId}
+
+Renders a document by merging a template with the JSON data you provide: reference it by [Template ID](/documentation/developer/http-api/introduction.md#template-id) to always render the latest deployed version, by [Version ID](/documentation/developer/http-api/introduction.md#version-id) to pin an exact one, or skip uploading entirely and [provide the template inline as base64](/documentation/developer/http-api/generate-reports.md#providing-a-template) in the request body. By default the response is a JSON object with a `renderId`; add `?download=true` to [get the rendered file directly](/documentation/developer/http-api/generate-reports.md#direct-download) in this same call.
+
+```bash
+curl  --location --request POST 'https://api.carbone.io/render/{templateId-or-versionId}' \
+      --header 'carbone-version: 5' \
+      --header 'Content-Type: application/json' \
+      --header 'Authorization: Bearer API_TOKEN' \
+      --data-raw '{ "data": { "firstname": "John", "lastname": "Wick" }, "convertTo": "pdf" }'
+```
+
+### Request header
+
+```json
+{
+  // REQUIRED - Pass your API token here (string)
+  "authorization"       : "Bearer API_TOKEN",
+
+  // REQUIRED - Content type (string)
+  "content-type"        : "application/json",
+
+  // REQUIRED - Pin the Carbone API major version to avoid breaking changes (string)
+  "carbone-version"     : "5",
+
+  // OPTIONAL - Webhook for asynchronous rendering, called by Carbone when the report is generated. More info (string)
+  "carbone-webhook-url" : "https://your-url",
+
+  // OPTIONAL - Webhook custom headers, where X is any header name. Ex: carbone-webhook-header-authorization, carbone-webhook-header-x-api-key. More info (string)
+  "carbone-webhook-header-X" : "headers value",
+
+  // OPTIONAL (v5.9.0+) - Custom authorization header for egress traffic. More info (string, max 512 chars)
+  "carbone-egress-header-authorization" : "my-secret"
+}
+```
+
+### Request body
+
+```jsonc
+{
+  // OPTIONAL - Data merged into the template with tags {d.}. Omit "data" to skip templating and only convert the file (tags left unchanged). Pass {} to run templating with an empty data-set (tags resolve to empty) (array|object)
+  "data"         : {},
+
+  // OPTIONAL - Output file format. More info (string|object)
+  "convertTo"    : "pdf",
+
+  // OPTIONAL - PDF converter engine, only relevant when "convertTo" is "pdf". "L" = LibreOffice (default), the best balance between performance and document compatibility. "O" = OnlyOffice, ideal for office documents (DOCX, XLSX, PPTX). "C" = Chromium, high-fidelity HTML-to-PDF conversion, perfect for web-based templates. More info (string)
+  "converter": "L",
+
+  // OPTIONAL - Render without a pre-uploaded template ID by providing the template here as a base64 string. When used, put the keyword "template" in the URL instead of the ID (POST /render/template). More info (string)
+  "template": "BASE64_ENCODED_TEMPLATE_CONTENT",
+
+  // OPTIONAL - Convert document dates to a timezone. More info (string)
+  "timezone"     : "Europe/Paris",
+
+  // OPTIONAL - Locale of the generated document. More info (string)
+  "lang"         : "en-us",
+
+  // OPTIONAL - Extra data object that can be merged into the template with tags {c.} (object)
+  "complement"   : {},
+
+  // OPTIONAL - Predefined alias (string)
+  "variableStr"  : "{#def = d.id}",
+
+  // OPTIONAL - Static or dynamic file name returned in the `content-disposition` header (the output extension is appended automatically). More info (string)
+  "reportName"   : "{d.date}",
+
+  // OPTIONAL - List of enumerations to use with the convEnum formatter (object)
+  "enum"         : {
+    "ORDER_STATUS" : ["open", "close"],
+    "SPEED" : {
+      "10" : "slow",
+      "20" : "fast"
+    }
+  },
+
+  // OPTIONAL - Localization dictionary to use with Carbone tags {t( )}. More info (object)
+  "translations" : {
+    "fr-ca" : {"one":"un" },
+    "es"    : {"one":"uno"}
+  },
+
+  // OPTIONAL - Currency source coming from your JSON data. More info (string)
+  "currencySource" : "EUR",
+
+  // OPTIONAL - Target currency for the generated document. More info (string)
+  "currencyTarget" : "USD",
+
+  // OPTIONAL - Exchange rates used for currency conversion. More info (object)
+  "currencyRates"  : {
+    "EUR" : 1,
+    "USD" : 1.1403
+  },
+
+  // OPTIONAL - Force the report to recompute pagination and table of contents. Requires "convertTo" to be defined (boolean)
+  "hardRefresh": false,
+
+  // OPTIONAL - Generate multiple reports with one template and multiple JSON objects. More info (string)
+  "batchSplitBy" : "d.items",
+
+  // OPTIONAL - From v5+, the output format for batch processing. More info (string)
+  "batchOutput" : "zip",
+
+  // OPTIONAL - Customize each file name inside a ZIP batch export, Carbone tags accepted. More info (string)
+  "batchReportName" : "report-{d.id}",
+
+  // OPTIONAL - Pre-release feature level for this render. Overrides the server default. More info (number)
+  "preReleaseFeatureIn" : 5000000
+}
+```
+
+### Request Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `download` | Boolean | No | `true`: returns the generated document directly as a file stream (the `Content-Type` reflects the output format). The file is not stored on Carbone servers and no `renderId` is issued, so there is no need to call `GET /render/{renderId}` ([more info](/documentation/developer/http-api/generate-reports.md#direct-download)).   `false`: returns a JSON object with a `renderId`; use `GET /render/{renderId}` to download the file in a second call ([see Download Reports](/documentation/developer/http-api/download-reports.md)). |
+
+### Response
+
+On success, by default a JSON response with content-type `application/json` containing the `renderId` is returned, which is a unique identifier for the generated document. If the query parameter **download=true** is used, the response body will be the file itself, and the content type will reflect the type of the generated document.
+
+|   | Status Code | Body |
+| --- | --- | --- |
+| 🟢 | 200 | `{ "success" : true, "data": { "renderId": "" } }`   **or** File Stream, if the query parameter `download=true` is used. |
+| 🔴 | 400 | `{ "success" : false, "error" : ""Content-Type" header is not "application/json""}` |
+| 🔴 | 400 | `{ "success" : false, "error" : "Invalid templateId"}` |
+| 🔴 | 401 | `{ "success" : false, "error" : "Unauthorized, please provide a correct API key on the "Authorization" header"}` |
+| 🔴 | 404 | `{ "success" : false, "error" : "Template not found"}` |
+| 🔴 | 413 | `{ "success" : false, "error" : "Content too large, the JSON size limit is X MB"}` |
+| 🔴 | 422 | `{ "success" : false, "error" : "Missing "data" property in body"}`   **Note:** From `carbone-version: 5`, `data` is optional: omitting it converts the file without templating (tags left unchanged). This error applies to `carbone-version: 4` only. |
+| 🔴 | 500 | `{ "success" : false, "error" : "Error while rendering template"}` |
+| 🔴 | 500 | `{ "success" : false, "error" : "Error while setting up the webhook"}` |
+
+## Providing a template
+
+Every render call needs a template. There are two ways to provide one:
+
+**Upload it first (template ID)**: Upload your template once with `POST /template`, which returns a `templateId` (and a `versionId` per version). Reference that ID in the render URL: `POST /render/{templateId-or-versionId}`. Best when the same template is reused across many renders. See [Upload a template](/documentation/developer/http-api/manage-templates.md#upload-a-template).
+
+**Provide it inline (base64)**: Skip the upload and send the template directly in the request body as a base64-encoded string in the `template` field, using the keyword `template` in the URL instead of an ID: `POST /render/template`. The template is not stored on Carbone's servers, so a single API call is enough. Best for one-off or dynamically generated templates.
+
+## Direct download
+
+The `POST /render/{templateId-or-versionId}` endpoint accepts a `?download=true` query parameter to download the rendered report directly.
+
+When this option is used, the file is not stored on our servers. A single API call is enough to download the file. There is no need to call `GET /render/{renderId}`.
+
+When `download=true`, the response shape depends on the outcome:
+
+-   **`200 OK`**: the body is the binary file, returned with the headers below (`Content-Type` matches the output format).
+-   **Any error (`4xx`/`5xx`)**: the response falls back to JSON (`application/json`) with the usual `{ "success": false, "error": "..." }` body.
+
+```text
+  Content-Disposition: 'attachment; filename="report.pdf"'
+  Content-Type: 'application/pdf'
+```
+
+## Output filename
+
+With Carbone, even the generated report filename is a template!
+
+Define the `reportName` option in the request body to set a custom filename. It accepts a static string or Carbone tags for dynamic filenames, for example:
+
+```json
+{
+  "data": { "company": "Acme", "date": "2026-06-29" },
+  "reportName": "{d.company}-{d.date}"
+}
+```
+
+Carbone appends the output file extension automatically (based on the generated format), so do not include it in `reportName`. The resulting filename is returned in the `content-disposition` header when the report is downloaded, for example `Acme-2026-06-29.pdf`.
+
+## Output file type
+
+By default, if `convertTo` is undefined, the output file type is the same as the input template file type.
+
+The table below lists all accepted `convertTo` values according to the input template file type.
+
+And some output file types can have additional options. See the dedicated documentation
+
+-   for [pdf](#pdf-options)
+-   for [jpg/png](#jpg-png-options)
+-   for [csv](#csv-options)
+
+| Template Type | `convertTo` |
+| --- | --- |
+| document | pdf, docx, odt, bib, doc, doc6, doc95, docbook, docx7, fodt, html, latex, ooxml, ott, psw, rtf, stw, sxw, text, txt, uot, xhtml, jpg, jpeg, png, epub, md, svg, webp, pages |
+| spreadsheet | pdf, xlsx, ods, csv, dbf, dif, fods, html, ooxml, ots, pxl, slk, stc, sxc, uos, xhtml, xls, xls5, xls95, xlt, xlt5, xlt95, numbers, parquet |
+| presentation | pdf, pptx, odp, bmp, emf, eps, fodp, gif, html, jpg, met, odg, pbm, pct, pgm, png, ppm, pwp, ras, sti, svg, svm, swf, sxi, tiff, uop, wmf, xhtml, otp, potm, pot, pps, ppt, webp |
+| web | pdf, etext, html10, html, txt, text10, text |
+| graphics | bmp, emf, eps, fodg, gif, html, jpg, met, odd, otg, pbm, pct, pdf, pgm, png, ppm, ras, std, svg, svm, swf, sxd, tiff, wmf, xhtml, webp, pub, cdr |
+
+Notes:
+
+-   Export to `xhtml` to embed images in html
+
+## Multi-timezone
+
+Some date formatters like `formatD` or `formatI` adapt the inserted date in the template according to the timezone.
+
+List of accepted timezone (Column TZ identifier) : [https://en.wikipedia.org/wiki/List\_of\_tz\_database\_time\_zones](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)
+
+## Multi-language
+
+Many text, date, and number formatters like `formatN`, `formatD`, `formatI` adapt their output in the template according to the locale.
+
+Also, the `lang` parameter is used to select the corresponding `translations` when the Carbone tag `{t()}` is used for multi-lingual reports.
+
+List of supported locales: [https://github.com/carboneio/carbone/blob/master/formatters/\_locale.js](https://github.com/carboneio/carbone/blob/master/formatters/_locale.js)
+
+You can support multiple languages in your report by using [translations formatters](/documentation/design/advanced-features/translations-i18n.md).
+
+## Multi-currency
+
+You can create templates that adapt their currency depending on the locale.
+
+The `formatC` formatter converts amounts from a source currency to a target currency using the exchange rates you provide:
+
+-   `currencySource`: the currency your amounts are expressed in within your JSON data.
+-   `currencyTarget`: the currency to convert those amounts to in the generated document.
+-   `currencyRates`: the exchange rates used to convert from `currencySource` to `currencyTarget`.
+
+[Learn more](/documentation/design/formatters/currency.md)
+
+## Pre-release features
+
+Sets the pre-release feature level for this render only. Only features and fixes introduced **up to** the given tag are applied. Higher tags stay disabled. This overrides the [global configuration](/documentation/developer/on-premise-installation/configuration.md#pre-release-tag) default, and can itself be overridden by the tag in the template.
+
+Use it to opt into upcoming features early, or to keep Carbone v5 behaving like v4 during a migration.
+
+See [Pre-release features](/documentation/design/overview/version-lifecycle.md#pre-release-features) and [Force Carbone v5 to behave like v4](/documentation/design/overview/version-lifecycle.md#force-carbone-v5-to-behave-like-v4).
+
+## Converters
+
+Document conversion (for example DOCX to PDF) is handled by a dedicated converter engine. From v5, the `converter` option in the request body selects which engine Carbone uses.
+
+-   It is only relevant when `convertTo` is set to `"pdf"`; for any other output format it is ignored.
+-   If omitted, LibreOffice (`L`) is used by default.
+-   All engines run from Carbone's own pre-built, optimized binaries (`bin.carbone.io`) for ARM and x64.
+
+### Choosing a converter
+
+| `converter` | Engine | Recommended for | Notes |
+| --- | --- | --- | --- |
+| `L` | LibreOffice (default) | DOCX/XLSX/PPTX, ODT/ODS/ODP/ODG and MD to PDF | Best balance between performance and document compatibility. Supports all [PDF options](#pdf-options). |
+| `O` | OnlyOffice | DOCX/XLSX/PPTX to PDF | Alternative for office documents. Only [`Security`](#pdf-options) and [`Watermark`](#watermark-options) options are supported (see [limitations](#converters-onlyoffice-limitations)). |
+| `C` | Chromium | HTML to PDF/JPG/PNG/WEBP | High-fidelity HTML-to-PDF conversion, perfect for web-based templates. Only [`Security`](#pdf-options) and [`Watermark`](#watermark-options) options are supported (see [limitations](#converters-chromium-limitations)). |
+
+For the most advanced PDF controls, use LibreOffice.
+
+### OnlyOffice limitations
+
+-   No custom PDF export options (such as PDF/UA, compression quality, forms, etc.).
+-   Table of Contents in DOCX files is not updated when generating documents.
+-   SVG support is very limited.
+-   Hidden characters are not supported.
+-   Repeated headers on page breaks are not supported.
+-   High memory usage (RAM).
+-   Slower performance with small documents (< 50 pages).
+
+### Chromium limitations
+
+-   No custom PDF export options: only [`Security`](#pdf-options) and [`Watermark`](#watermark-options) options are supported.
+-   **100 MB maximum document size.** Chrome enforces a built-in limit on the messages it exchanges with Carbone, which applies both to the HTML sent for conversion and to the generated PDF. This limit comes from Chrome itself and cannot be raised through the Carbone configuration. Above it, the conversion fails, and Carbone immediately restores the communication with Chrome so the following requests are not affected. For very large documents, split the source into several parts and merge the generated PDFs.
+
+## PDF options
+
+Options can be passed for PDF conversion. In this case, `convertTo` has to be an object with `formatName` set to `pdf` and `formatOptions` with options.
+
+```jsonc
+{
+  "convertTo" : {
+    "formatName"    : "pdf",
+    "formatOptions" : {
+      "EncryptFile"          : true,
+      "DocumentOpenPassword" : "QWERTY1234",
+      "Watermark"            : "Watermark Carbone.io"
+    }
+  }
+}
+```
+
+The following options can be passed to `formatOptions`:
+
+| Option name | Type | Default | Description |
+| --- | --- | --- | --- |
+| **General** |   |   |   |
+| SelectPdfVersion | integer | 0 | Specifies the PDF version to emit.   **0** : PDF 1.6 Standard.   **1** : PDF/A-1 (ISO 19005-1:2005).   **2** : PDF/A-2 (ISO 19005-2:2011).   **3** : PDF/A-3 (ISO 19005-3:2012).   **4** : PDF/A-4 (ISO 19005-4).   **15** : PDF 1.5 Standard.   **16** : PDF 1.6 Standard.   **17** : PDF 1.7 Standard.   **20** : PDF 2.0 Standard. |
+| ConvertOOoTargetToPDFTarget | boolean | false | Renames .od\[tpgs\] links to .pdf in exported PDF, leaving source untouched. |
+| ExportFormFields | boolean | true | Specifies whether form fields are exported as widgets or only as fixed print representation. |
+| ExportLinksRelativeFsys | boolean | false | Exports file system hyperlinks as relative to source document. |
+| ExportNotes | boolean | true | Specifies if notes are exported to PDF. |
+| ExportNotesPages | boolean | false | Specifies if notes pages are exported to PDF (Impress only). |
+| FormsType | integer | 0 | Format for PDF form submission:   **0**: FDF   **1**: PDF   **2**: HTML   **3**: XML |
+| IsAddStream | boolean | false | Adds stream containing original document for archiving (PDF Import only). |
+| IsSkipEmptyPages | boolean | false | Suppresses auto-inserted empty pages (Writer only). |
+| UseTransitionEffects | boolean | true | Exports slide transitions to PDF (Impress only). |
+| **Security** |   |   |   |
+| DocumentOpenPassword | string |   | Password to open PDF file (with "EncryptFile" enabled). |
+| EncryptFile | boolean | false | Encrypts the PDF file with AES-256; the `"DocumentOpenPassword"` is required to open it. The document properties (Title, Author, Subject, and the other Info strings) are encrypted as well, so they cannot be read without the password. |
+| PermissionPassword | string |   | Password for restricted permissions if `"RestrictPermissions"` enabled. |
+| RestrictPermissions | boolean | false | Enables restricted permissions in the PDF document. Must be used with `"PermissionPassword"`. |
+| Changes | integer | 4 | What changes are allowed in the PDF.   **0**: None   **1**: Insert/delete/rotate pages   **2**: Fill forms   **3**: Comment/fill forms   **4**: Any except page extraction.   Requires `"RestrictPermissions": true` and `"PermissionPassword"`. |
+| EnableCopyingOfContent | boolean | true | Allows copying content to other documents.   Requires `"RestrictPermissions": true` and `"PermissionPassword"`. |
+| EnableTextAccessForAccessibilityTools | boolean | true | Allows extraction for accessibility tools.   Requires `"RestrictPermissions": true` and `"PermissionPassword"`. |
+| Printing | integer | 2 | Allowed printing:   **0**: None   **1**: Low resolution (150 DPI)   **2**: Max resolution.   Requires `"RestrictPermissions": true` and `"PermissionPassword"`. |
+| **Compression & Quality** |   |   |   |
+| MaxImageResolution | integer | 300 | Reduce images to this DPI if "ReduceImageResolution" is true. Possible: 75, 150, 300, 600, 1200 |
+| Quality | integer | 90 | JPG export quality (1-100). Lower = higher compression/larger file; higher = better quality/smaller file. |
+| ReduceImageResolution | boolean | false | Reduces image resolution to "MaxImageResolution". |
+| UseLosslessCompression | boolean | true | Use PNG (lossless) or JPEG for graphics. |
+| **Watermark** |   |   |   |
+| Watermark | string |   | Draws text watermark on every page. |
+| Watermarks | array |   | Array of up to 5 watermark objects (see [Watermark options](#watermark-options)). |
+| **Accessibility** |   |   |   |
+| UseTaggedPDF | boolean | false | Creates PDF with special tags (Tagged PDF). |
+| PDFUACompliance | boolean | false | Enables PDF/UA Universal Accessibility standard (ISO 14289). |
+| AllowDuplicateFieldNames | boolean | false | Allows export of multiple form fields with same name (OOo 3.3+). |
+| **View/Appearance** |   |   |   |
+| CenterWindow | boolean | false | Opens PDF centered on screen. |
+| DisplayPDFDocumentTitle | boolean | true | Shows document title in viewer window. |
+| ExportBookm
