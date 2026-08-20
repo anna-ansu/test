@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Сводный отчет</title>
+    <!-- Подключаем Bootstrap 5 -->
+    <link href="https://jsdelivr.net" rel="stylesheet">
+    <style>
+        /* Стили оптимизации под PDF/Печать */
+        @media print {
+            body {
+                background-color: #fff;
+                color: #000;
+                font-size: 12px;
+            }
+            .container-fluid {
+                padding: 0;
+            }
+            /* Запрещаем разрыв виджета посреди страницы */
+            .widget-card {
+                page-break-inside: avoid;
+                break-inside: avoid;
+                margin-bottom: 15px;
+                box-shadow: none !important;
+                border: 1px solid #dee2e6 !important;
+            }
+            /* Форсируем отображение фоновых цветов в PDF */
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        /* Стили для кастомизации виджетов */
+        .widget-card {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-radius: 8px;
+            border: none;
+        }
+        .widget-stat {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-light py-4">
+
+<div class="container-fluid px-4">
+    
+    <!-- Шапка отчета -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h1 class="h3 mb-1">Сводный аналитический отчет</h1>
+            <p class="text-muted small mb-0">Период: Январь — Август 2026</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary fs-6">ID: #84920</span>
+        </div>
+    </div>
+
+    <!-- Ряд 1: Верхние карточки-виджеты (KPI) -->
+    <div class="row g-3 mb-4">
+        <!-- Виджет 1 -->
+        <div class="col-md-4">
+            <div class="card widget-card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted uppercase text-xs">Общая выручка</h6>
+                    <div class="widget-stat text-success">1,245,000 ₽</div>
+                    <p class="card-text small text-muted mt-2">↑ +12% по сравнению с прошлым месяцем</p>
+                </div>
+            </div>
+        </div>
+        <!-- Виджет 2 -->
+        <div class="col-md-4">
+            <div class="card widget-card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Новые клиенты</h6>
+                    <div class="widget-stat text-primary">3,420</div>
+                    <p class="card-text small text-muted mt-2">Активных пользователей: 89%</p>
+                </div>
+            </div>
+        </div>
+        <!-- Виджет 3 -->
+        <div class="col-md-4">
+            <div class="card widget-card h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 text-muted">Конверсия</h6>
+                    <div class="widget-stat text-warning">4.8%</div>
+                    <p class="card-text small text-muted mt-2">Целевое действие: покупка</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ряд 2: Основная Сводная Таблица -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card widget-card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0">Детализация по направлениям</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="ps-4">Категория</th>
+                                <th scope="col">Продажи</th>
+                                <th scope="col">Доход</th>
+                                <th scope="col">Статус</th>
+                                <th scope="col" class="pe-4 text-end">Прогресс</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="ps-4 fw-medium">Электроника</td>
+                                <td>840 шт.</td>
+                                <td>540,000 ₽</td>
+                                <td><span class="badge bg-success-subtle text-success">Стабильно</span></td>
+                                <td class="pe-4 text-end">
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: 75%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-medium">Бытовая техника</td>
+                                <td>310 шт.</td>
+                                <td>420,000 ₽</td>
+                                <td><span class="badge bg-success-subtle text-success">Стабильно</span></td>
+                                <td class="pe-4 text-end">
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-success" style="width: 60%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-medium">Одежда и обувь</td>
+                                <td>1,120 шт.</td>
+                                <td>285,000 ₽</td>
+                                <td><span class="badge bg-warning-subtle text-warning">Внимание</span></td>
+                                <td class="pe-4 text-end">
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-warning" style="width: 40%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+</body>
+</html>
