@@ -1,0 +1,81 @@
+@startuml
+left to right direction
+
+actor Пользователь as User
+
+rectangle Балансировщик as LB {
+    component Traefik as TR
+}
+
+rectangle Прикладной слой as APP {
+    component Open WebUI as OW
+    component SearXNG as SX
+}
+
+rectangle Firecrawl as FC {
+    component Firecrawl API as API
+    component Playwright as PW
+}
+
+rectangle Инфраструктура as INFRA {
+    component Valkey as VK
+    component RabbitMQ as RMQ
+    component PostgreSQL as PG
+}
+
+User --> TR
+TR --> OW
+OW --> SX
+OW --> API
+API --> PW
+API --> VK
+API --> RMQ
+API --> PG
+@enduml
+
+@startuml
+left to right direction
+
+actor Пользователь as User
+
+rectangle Балансировщик as LB {
+    component Traefik as TR
+}
+
+rectangle Прикладной_слой as APP {
+    component Open_WebUI as OW
+    component SearXNG as SX
+}
+
+rectangle Firecrawl as FC {
+    component Firecrawl_API as API
+    component Playwright as PW
+}
+
+rectangle Инфраструктура as INFRA {
+    component Valkey as VK
+    component RabbitMQ as RMQ
+    component PostgreSQL as PG
+}
+
+' 1. Входной трафик пользователя через балансировщик
+User --> TR
+TR --> OW
+
+' 2. Оркестрация со стороны Open WebUI
+OW --> SX : 1. Поиск ссылок (JSON)
+OW --> API : 2. Запрос на парсинг (Scrape/Crawl)
+
+' 3. Внутренняя кухня Firecrawl API
+API --> RMQ : Помещает задачу в очередь
+API --> VK : Пишет кэш/статусы задач
+API --> PG : Сохраняет логи/данные (nuq-postgres)
+
+' 4. Асинхронное выполнение воркерами Playwright
+RMQ --> PW : PW забирает задачу из очереди
+PW --> VK : Проверяет лимиты/кэш сайтов
+
+@endum
+
+
+
