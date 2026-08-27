@@ -78,4 +78,50 @@ PW --> VK : Проверяет лимиты/кэш сайтов
 @endum
 
 
+@startuml
+left to right direction
+
+actor Пользователь as User
+
+rectangle Балансировщик {
+    component Traefik as TR
+}
+
+rectangle "Прикладной слой" {
+    component "Open WebUI" as OW
+    component SearXNG as SX
+}
+
+rectangle Firecrawl {
+    component "Firecrawl API" as API
+    component "Firecrawl Worker" as WORKER
+    component Playwright as PW
+}
+
+rectangle Инфраструктура {
+    database "NuQ PostgreSQL" as PG
+    component RabbitMQ as RMQ
+    component "Redis / Valkey" as REDIS
+}
+
+User --> TR
+TR --> OW
+
+OW --> SX : Поиск ссылок
+OW --> API : Scrape / Crawl
+
+API --> PG : Создание/состояние задач
+API --> REDIS : Cache / rate limits
+
+PG --> WORKER : Задачи NuQ
+RMQ --> WORKER : Уведомления NuQ
+
+WORKER --> PW : HTTP /scrape
+PW --> WORKER : Результат страницы
+
+WORKER --> PG : Результат / статус
+WORKER --> REDIS : Cache / state
+
+@enduml
+
 
