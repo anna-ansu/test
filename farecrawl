@@ -1,0 +1,122 @@
+playwright-service
+valkey:9-1/ redis
+firecrawl-api
+rabbitmq:4-1
+nuq-postgres:latest
+
+nuq-worker-...
+warn [nuq/rabbitmq:]: NuQ sender get failed, falling back to postgres 
+{"module":"nuq/rabbitmq","err":{"name":"Error","message":"Channel ended, no reply will be forthcoming","stack":"Error: Channel ended, no reply will be forthcoming\n    
+at rej (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/channel.js:185:9)\n    
+at Channel._rejectPending (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/channel.js:188:7)\n    
+at Channel.toClosed (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/channel.js:154:10)\n    
+at Connection._closeChannels (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/connection.js:337:20)\n    
+at Connection.toClosed (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/connection.js:344:10)\n    
+at Object.accept (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/connection.js:611:18)\n    
+at Connection.mainAccept (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/connection.js:579:33)\n    
+at Socket.go (/app/node_modules/.pnpm/amqplib@0.10.9/node_modules/amqplib/lib/connection.js:431:16)\n    
+at Socket.emit (node:events:519:28)\n    
+at emitReadable_ (node:internal/streams/readable:834:12)"}}
+
+
+
+name: firecrawl
+
+x-common-env: &common-env
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+  PLAYWRIGHT_MICROSERVICE_URL: http://playwright-service:3000/scrape
+  POSTGRES_USER: ${POSTGRES_USER:-postgres}
+  POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-postgres}"
+  POSTGRES_DB: ${POSTGRES_DB:-postgres}
+  POSTGRES_HOST: nuq-postgres
+  POSTGRES_PORT: 5432
+  USE_DB_AUTHENTICATION: false
+  NUM_WORKERS_PER_QUEUE: 1
+  CRAWL_CONCURRENT_REQUESTS: 1
+  MAX_CONCURRENT_JOBS: 1
+  BROWSER_POOL_SIZE: 1
+
+services:
+  playwright-service:
+    image: ...playwright-service:latest
+    container_name: fc-playwright
+    restart: no
+    environment:
+      PORT: 3000
+      MAX_CONCURRENT_PAGES: 3
+      COREPACK_ENABLE: "0"
+    command: ["node", "/usr/src/app/dist/api.js"]
+
+  firecrawl-api:
+    image: .../firecrawl:latest
+    container_name: fc-firecrawl-api
+    environment:
+      <<: *common-env
+      REDIS_URL: redis://redis:6379
+      REDIS_RATE_LIMIT_URL: redis://redis:6379
+      HOST: "0.0.0.0"
+      PORT: 3002
+      NUQ_RABBITMQ_URL: amqp://rabbitmq:5672
+      # NUQ_DATABASE_URL: postgres://postgres:postgres@sc-postgres:5432/postgres
+    depends_on:
+      redis:
+        condition: service_started
+      playwright-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    extra_hosts:
+      - "host....:host-gateway"
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik
+      - traefik.http.routers.firecrawl-api.rule=Host(`....`)
+      - traefik.http.services.firecrawl-api.loadbalancer.server.port=3002
+      - traefik.http.services.firecrawl-api.loadbalancer.server.scheme=http
+      - traefik.http.routers.firecrawl-api.entrypoints=websecure
+      - traefik.http.routers.firecrawl-api.tls.certresolver=cloud-ceb-loc
+
+      
+
+  redis:
+    image: .../valkey:9-1
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+ 
+  rabbitmq:
+    image: .../rabbitmq:4-1
+    container_name: fc-rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  nuq-postgres:
+    image: .../nuq-postgres:latest
+    container_name: fc-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    
+networks:
+  traefik:
+    external: true
+
+volumes: 
+  redis_data: 
+
+
+
+
+
