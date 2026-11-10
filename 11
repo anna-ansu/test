@@ -1,3 +1,135 @@
+Теперь задача понятнее. Вам нужен не просто генератор фикстур, а внутренний инструмент, в котором пользователи смогут самостоятельно создавать тестовые данные, изменять их и использовать для тестирования.
+
+При этом всё должно работать в закрытом контуре, без внешнего облака, а основой генерации должно быть описание данных, а не ручное заполнение форм.
+
+Я бы разделил исследование на два направления.
+
+1\. Готовые приложения полного цикла
+
+Пользователь открывает интерфейс, выбирает схему данных, генерирует набор фикстур, редактирует значения, сохраняет набор и использует его при тестировании.
+
+2\. Библиотеки и компоненты для собственного приложения
+
+Ваше приложение предоставляет интерфейс, а библиотеки выполняют генерацию по JSON Schema, YAML, структуре БД, ORM-моделям или другим описаниям.
+
+Важный момент: генерация отдельных полей и создание согласованных тестовых данных — разные задачи. Например, сгенерировать 100 пользователей относительно просто. Сгенерировать пользователей, их организации, роли и связанные заявки с корректными внешними ключами уже сложнее.
+
+### 1\. Готовые приложения
+
+Это кандидаты, которые стоит рассматривать прежде, чем разрабатывать собственный интерфейс.
+
+![generatedata.com Reviews in 2026](https://images.openai.com/static-rsc-4/n0hJRM1Wq_DWhsewXuVtTxuQXIvpy-ZiUBJxl4fM7Arn4uPgMjL8jjRhOQCM6kitQdDboEVkrh3b-roTJg6guPJ_-oEH7dOSik3DR5GbgRuJLapXLwpcMA8mRKpaBXuqpzTdDcDOtUS2ujfvdj7QziSt_jg4hEm-qWzhnMKJC5l_7CH5CPsmYXwhTwOVoES3?purpose=fullsize)
+
+[GenerateData](https://generatedata.com/?utm_source=chatgpt.com)
+
+Open-source веб-приложение для генерации тестовых данных. Есть настройка полей, типов, экспорт в JSON, CSV, SQL и другие форматы.
+
+Подходит: самостоятельная генерация пользователями, развёртывание у себя. Не полноценная система тестирования.
+
+![Production-like test data - Synthesized](https://images.openai.com/static-rsc-4/MeynuclEgq4rWsPHAJ7MvrOiv6FyVm4KTDgwG96iu2hZ79q4t0tgdWxSDLG1Senydp8Zjo5teGMlxmF3I06k8gCNpcwL9Tzc9ZLsmgkliEOECbT4GYTGsiKOos1IWUDho0M54nr0bWYOQFx_38WIbBgpRNE0--NxGz2SQdqi3gIR185EHQYL8MRoUpqFPKbl?purpose=fullsize)
+
+[SynthForge IO](https://synthforge.io/?utm_source=chatgpt.com)
+
+Визуальный редактор таблиц, ключей и связей. Поддерживает импорт SQL/JSON, генерацию связанных наборов данных.
+
+Подходит: пример полноценного пользовательского интерфейса. Возможность локального развёртывания и лицензирование нужно отдельно проверить.
+
+![Creating Test Data with Mockaroo - Michael Whelan - behaviour driven blog](https://images.openai.com/static-rsc-4/HyWeUcPA7aWfACOSmEw_kBTp7KrRzSC-veUGmLzImH7G9ELfxCb3ANapmtnD9TEd7Ol8FtiVpTTYhpSgJpdFyQcq5uHTUA2HtEuRwH4cWZbmkreb0fXTbdFHhFlyDw3Oes4drr0V3OgZl2EQ-Nr7N9Y_t_BALwsoqYXG8BdA6w4zyZmdekvob_MUrinklqVn?purpose=fullsize)
+
+[Mockaroo](https://www.mockaroo.com/?utm_source=chatgpt.com)
+
+Очень близок к желаемому пользовательскому сценарию: задаёшь поля и правила, получаешь данные, можешь настраивать генераторы.
+
+Ограничение: не open-source, стандартная облачная версия не подходит для закрытого контура.
+
+![Introducing the Fabricate Data Agent: The AI Agent for Synthetic Data Generation | Blog | Tonic.ai](https://images.openai.com/static-rsc-4/45T1GE-V2gre1YdJmB1ppRYh6BDvaaD5hpUHDjUvEIN6WCF4VwP-DzF8ARcp28lVx8xZKYyP2LYwyoxiZvJ3eGo09b-kpteKf38T-uZ35T9CHvKrnC5TdFdcwKfRakUqhtIP0YVJnsjn_z_0Dvh_EJw4sgXyzc22WHiBur7NQtPHJYHcJZh9qINeEptOOLhr?purpose=fullsize)
+
+[Tonic Fabricate](https://www.tonic.ai/?utm_source=chatgpt.com)
+
+Более сложная платформа: генерация по описанию, схемам и базам данных, сохранение связей, проверка согласованности результатов.
+
+Подходит: корпоративный вариант для оценки. Коммерческий продукт; условия изолированного развёртывания требуют проверки. tonic.ai
+
+![5 Best Tools to Generate Fake Data for Testing | by Sandun Lakshan | T3CH | Medium](https://images.openai.com/static-rsc-4/bW8lPX_yv2KOBGJ2UjDvv3jazY92p1gB6uPjbOp2YGIfEwhWMNAWVPApLsb1naTJYAROk73WDvlTcriy4hLW__TfNVCesrFprXFRhxCB2SgEQoksFDf3NaBFStltiKawol6JNu8zLZLzjVWI3sQAA-NP1exQJViuZGFhHJAfS1b2il4y6kDGWU3xcvtOdXw5?purpose=fullsize)
+
+[Synthetic Data Generator (SynthGen)](https://www.synthgenapp.dev/?utm_source=chatgpt.com)
+
+Небольшой open-source проект с веб-интерфейсом, CLI и REST API. Есть генерация по типам полей и экспорт JSON/CSV/SQL.
+
+Подходит: как готовая основа для доработки или прототипа. Проект на Python, не JS. Synthetic Data Generator
+
+### 2\. Библиотеки для собственного приложения
+
+| Решение           | Источник описания          | Основная роль                                                |
+| ----------------- | -------------------------- | ------------------------------------------------------------ |
+| JSON Schema Faker | JSON Schema                | Генерация JSON с ограничениями                               |
+| Faker.js          | JS-конфигурация            | Реалистичные имена, адреса, даты и т. д.                     |
+| Monkey Mocker     | TypeScript-модели          | Генерация тестовых объектов                                  |
+| Faker ecosystem   | Код и правила              | Базовые генераторы, нужно выбирать поддерживаемую реализацию |
+| Snowfakery        | YAML                       | Связанные сущности и сценарии                                |
+| Synth             | Описание коллекций, данные | Генерация структурированных данных                           |
+| Benerator         | Модели и БД                | Большие и связанные наборы                                   |
+| SDV               | Таблицы, метаданные        | Синтетические данные с сохранением статистических свойств    |
+
+Для вашей задачи JSON Schema Faker + Faker.js — наиболее прямое JS-направление. JSON Schema Faker поддерживает ограничения, вложенные объекты, ссылки `$ref` и расширение генераторами Faker. Generate Realistic Test Data
+
+Однако одна библиотека не предоставит готовый пользовательский кабинет, историю фикстур, редактор, права доступа и запуск тестов. Эти возможности придётся собирать отдельно.
+
+### 3\. Сравнение по вашим требованиям
+
+✓ — подходит, ◐ — частично или с доработкой, — — не основная функция, ? — требует проверки
+
+| Инструмент        | Web UI | Свой сервер | Схема / конфиг | Редактирование результата |
+| ----------------- | ------ | ----------- | -------------- | ------------------------- |
+| GenerateData      | ✓      | ✓           | ◐              | ◐                         |
+| SynthGen          | ✓      | ✓           | ◐              | ◐                         |
+| SynthForge IO     | ✓      | ?           | ✓              | ?                         |
+| Mockaroo          | ✓      | ?           | ✓              | ◐                         |
+| Tonic Fabricate   | ✓      | ?           | ✓              | ◐                         |
+| JSON Schema Faker | —      | ✓           | ✓              | —                         |
+| Synth             | —      | ✓           | ✓              | —                         |
+| Snowfakery        | —      | ✓           | ✓              | —                         |
+
+Здесь важно различать редактирование правил генерации и редактирование уже полученных значений. Второе реализовано далеко не во всех продуктах.
+
+### 4\. Как может выглядеть ваше приложение
+
+Генератор фикстур
+
+Пример интерфейса
+
+Источник структуры
+
+JSON SchemaYAMLБД
+
+Описание пользователя
+
+{ "name": { "type": "string" }, "age": { "minimum": 18, "maximum": 65 }, "email": { "format": "email" } }
+
+Количество записей
+
+Возраст18–65
+
+Сформировать пример реализацииЭто макет возможного интерфейса, а не работающий генератор.
+
+### 5\. Что я предлагаю исследовать глубже
+
+Я бы выделил три основных кандидата: GenerateData как готовый интерфейс, JSON Schema Faker + Faker.js как основу собственного JS-приложения и Synth / Snowfakery для сложных связанных данных.
+
+Отдельно стоит проверить Prisma: это не самостоятельный генератор фикстур, но Prisma Schema может стать источником структуры моделей и отношений. Для SQL-баз также возможен импорт структуры через introspection.
+
+Есть один принципиальный вопрос, который влияет на выбор всей системы.
+
+Что означает «дальнейшее тестирование самостоятельно»?
+
+* Пользователь генерирует фикстуры, редактирует, сохраняет и скачивает JSON — затем тестирует в другом инструменте.
+
+* Пользователь генерирует фикстуры и прямо из этого же приложения отправляет их в ваш API, смотрит ответ и проверяет результат.
+
+Во втором случае мы уже выбираем не только генератор данных, но и платформу для тестирования API.
+
+
+
 
 #!/bin/bash
 
