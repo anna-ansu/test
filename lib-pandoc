@@ -1,0 +1,435 @@
+### Альтернативные варианты конвертации Textile → CommonMark без плагина Redmine
+
+Теперь рассмотрим решения, при которых нам не нужно устанавливать Redmine Reformat, применять патчи или разворачивать промежуточный Redmine.
+
+Основная идея — работать непосредственно с восстановленной базой MySQL, используя внешнюю утилиту для преобразования текстовых данных.
+
+При этом необходимо разделить две задачи:
+
+* Конвертация разметки — преобразование Textile в современный Markdown/GFM.
+
+* Обработка базы данных — выбор нужных таблиц и полей, чтение записей и сохранение результата.
+
+Для первой задачи существуют готовые библиотеки и утилиты. Для второй может потребоваться небольшой скрипт или готовое решение для миграции Redmine.
+
+### 1\. Pandoc + отдельный скрипт обработки MySQL
+
+Наиболее интересный вариант для вашей инфраструктуры.
+
+Pandoc — универсальный open-source конвертер текстовых форматов, работающий локально через командную строку.
+
+Ресурсы: [GitHub](https://github.com/jgm/pandoc?utm_source=chatgpt.com) · [Документация](https://pandoc.org/MANUAL.html?utm_source=chatgpt.com) · [Docker-образы](https://hub.docker.com/r/pandoc/core?utm_source=chatgpt.com).
+
+Поддерживает прямую конвертацию в GFM:
+
+```bash
+pandoc -f textile -t gfm --wrap=none
+```
+
+Поэтому нам не нужны старый Redmine, Ruby, Rails и патч CommonMark.
+
+### Архитектура
+
+Исходный SQL-дамп Redmine 4.0.3
+
+Временный стек Portainer
+
+MySQL
+
+Восстановленная база
+
+Контейнер-конвертер
+
+Python + MySQL Connector
+
+Pandoc
+
+Новый SQL-дамп
+
+Старая схема БД + современный Markdown
+
+### Как физически работает конвертация
+
+Скрипт последовательно выполняет следующие операции:
+
+* Подключается к MySQL.
+
+* Получает текст из конкретного поля таблицы.
+
+* Передаёт текст в Pandoc.
+
+* Получает преобразованный GFM.
+
+* Записывает результат обратно в поле.
+
+* Переходит к следующей записи.
+
+Например, получение данных:
+
+```sql
+SELECT id, description
+FROM issues
+WHERE description IS NOT NULL
+  AND description != '';
+```
+
+Преобразование через Python:
+
+```python
+import subprocess
+
+def convert_to_gfm(text):
+    result = subprocess.run(
+        ["pandoc", "-f", "textile",
+         "-t", "gfm", "--wrap=none"],
+        input=text,
+        text=True,
+        capture_output=True,
+        check=True
+    )
+
+    return result.stdout
+```
+
+Далее скрипт выполняет параметризованный `UPDATE` для конкретной записи.
+
+### Преобразуемые поля
+
+Можно вынести перечень полей в отдельный YAML-конфиг:
+
+```yaml
+source_format: textile
+target_format: gfm
+
+tables:
+  issues:
+    primary_key: id
+    fields:
+      - description
+
+  journals:
+    primary_key: id
+    fields:
+      - notes
+
+  wiki_contents:
+    primary_key: id
+    fields:
+      - text
+
+  projects:
+    primary_key: id
+    fields:
+      - description
+
+  news:
+    primary_key: id
+    fields:
+      - description
+
+  messages:
+    primary_key: id
+    fields:
+      - content
+
+  documents:
+    primary_key: id
+    fields:
+      - description
+```
+
+Это базовый перечень. История Wiki, история изменений задач и пользовательские поля потребуют отдельных правил обработки.
+
+### Преимущества и недостатки
+
+Преимущества
+
+Не нужен Redmine
+
+Не нужна миграция схемы
+
+Прямой переход в GFM
+
+Полный контроль над полями
+
+Простая контейнеризация
+
+Недостатки
+
+Нужно написать обвязку
+
+Специфика синтаксиса Redmine
+
+Обработка истории Wiki
+
+Самостоятельная проверка целостности
+
+Кстати, подобный подход уже обсуждался в официальном трекере Redmine. Там опубликован готовый пример скрипта на Tcl, который подключается непосредственно к MySQL и вызывает Pandoc для каждой записи. Redmine
+
+[Redmine #22005 — пример конвертации напрямую в MySQL](https://www.redmine.org/issues/22005?utm_source=chatgpt.com)
+
+### 2\. Ecodev Redmine Textile to Markdown
+
+Готовый Rake-скрипт, не являющийся полноценным плагином.
+
+[GitHub — Ecodev/redmine_convert_textile_to_markown](https://github.com/Ecodev/redmine_convert_textile_to_markown?utm_source=chatgpt.com)
+
+В отличие от Redmine Reformat, это отдельный скрипт, который размещается непосредственно в каталоге `lib/tasks` приложения.
+
+### Как работает
+
+MySQL с восстановленным дампом
+
+Тестовый Redmine
+
+`convert_textile_to_markdown.rake`
+
+Pandoc
+
+Преобразованная база
+
+Скачиваем файл:
+
+```text
+convert_textile_to_markdown.rake
+```
+
+Размещаем в приложении:
+
+```text
+/usr/src/redmine/lib/tasks/
+```
+
+Запускаем:
+
+```bash
+bundle exec rake convert_textile_to_markdown \
+  RAILS_ENV=production
+```
+
+Скрипт использует Pandoc и содержит дополнительную обработку особенностей разметки Redmine. Разработчики отдельно предупреждают о возможных проблемах с таблицами, нумерованными списками и сложным форматированием. GitHub
+
+Ограничения: решение старое, требует проверки совместимости, а для получения именно современного GFM необходимо проверить и при необходимости изменить параметры Pandoc внутри скрипта.
+
+Это вариант без установки плагина, но не без самого Redmine.
+
+### 3\. Redmine Convert Script
+
+Готовый набор Ruby-скриптов для преобразования отдельных элементов Textile.
+
+[Репозиторий GitVerse](https://gitverse.ru/pinsitam/redmine_convert_script?utm_source=chatgpt.com)
+
+В составе проекта:
+
+| Скрипт                   | Назначение               |
+| ------------------------ | ------------------------ |
+| 1_convert_lists.rb       | Нумерованные списки      |
+| 2_convert_headers.rb     | Заголовки                |
+| 3_convert_images.rb      | Изображения              |
+| 4_convert_tables.rb      | Таблицы                  |
+| 5_convert_code_blocks.rb | Блоки кода               |
+| 6_convert_inline_code.rb | Встроенный код           |
+| 7_convert_call_user.rb   | Упоминания пользователей |
+| 8_convert_pre.rb         | Блоки pre                |
+| 9_convert_url.rb         | Ссылки                   |
+
+Проект предназначен непосредственно для миграции исторических данных Redmine. Gitverse
+
+### Особенности
+
+В отличие от универсального конвертера, здесь используются отдельные правила преобразования элементов разметки.
+
+Это позволяет запускать и тестировать отдельные операции независимо.
+
+Однако при сложных комбинациях разметки последовательные текстовые замены могут конфликтовать друг с другом. Также необходимо изучить исходный код, чтобы определить зависимости от Redmine, способ подключения к базе и полноту обработки данных.
+
+Я бы использовала этот проект скорее как источник готовых правил, чем как основной инструмент миграции.
+
+### 4\. Python Textile + Markdownify
+
+Ещё один вариант, полностью независимый от Redmine и Pandoc.
+
+Используются две готовые Python-библиотеки:
+
+* [Python Textile](https://github.com/textile/python-textile?utm_source=chatgpt.com) — преобразование Textile в HTML.
+
+* [Markdownify](https://github.com/matthewwithanm/python-markdownify?utm_source=chatgpt.com) — преобразование HTML в Markdown.
+
+### Принцип работы
+
+MySQL: исходный Textile
+
+Python Textile
+
+Textile → HTML
+
+Markdownify
+
+HTML → Markdown
+
+MySQL: преобразованный Markdown
+
+Установка:
+
+```bash
+pip install textile markdownify mysql-connector-python
+```
+
+Пример:
+
+```python
+import textile
+from markdownify import markdownify
+
+def convert(text):
+    html = textile.textile(text)
+    return markdownify(html, heading_style="ATX")
+```
+
+Преимущество — всё работает в рамках одного Python-приложения.
+
+Недостаток — двойное преобразование через HTML. Могут теряться специфические конструкции Redmine, макросы и исходные особенности форматирования. Markdownify также не гарантирует полную совместимость со всеми расширениями GFM.
+
+### 5\. JavaScript: Textile parser + Turndown
+
+Аналогичный вариант полностью на Node.js.
+
+Компоненты:
+
+| Библиотека          | Назначение                   |
+| ------------------- | ---------------------------- |
+| textile-js          | Textile → HTML               |
+| turndown            | HTML → Markdown              |
+| turndown-plugin-gfm | Дополнительная поддержка GFM |
+| mysql2              | Подключение к MySQL          |
+
+Ресурсы:
+
+[Textile.js](https://github.com/borgar/textile-js?utm_source=chatgpt.com) · [Turndown](https://github.com/mixmark-io/turndown?utm_source=chatgpt.com) · [Turndown GFM](https://github.com/mixmark-io/turndown-plugin-gfm?utm_source=chatgpt.com) · [MySQL2](https://github.com/sidorares/node-mysql2?utm_source=chatgpt.com).
+
+```bash
+npm install textile-js turndown \
+  turndown-plugin-gfm mysql2
+```
+
+Принцип:
+
+```text
+MySQL
+  ↓
+Textile.js
+  ↓
+HTML
+  ↓
+Turndown + GFM
+  ↓
+MySQL
+```
+
+Плюс этого варианта — возможность написать небольшое самостоятельное Node.js-приложение и добавить собственные правила преобразования.
+
+Минус тот же: промежуточный HTML и необходимость отдельно учитывать разметку Redmine.
+
+### 6\. Прямое преобразование SQL-дампа
+
+Технически возможен и вариант, при котором не разворачивается даже MySQL.
+
+dump.sql
+
+Парсер MySQL-дампа
+
+Pandoc
+
+converted_dump.sql
+
+Но здесь появляется необходимость корректно разбирать SQL:
+
+* Многострочные значения.
+
+* Экранированные символы.
+
+* Кавычки внутри текстов.
+
+* Множественные INSERT.
+
+* Бинарные данные.
+
+* Кодировки.
+
+* Сжатое содержимое истории Wiki.
+
+Этот вариант я не рекомендую. Восстановить дамп во временной MySQL значительно проще и безопаснее, чем разрабатывать полноценный обработчик SQL-дампов.
+
+### 7\. Сравнение всех вариантов
+
+Включая два ранее рассмотренных варианта с плагином.
+
+| Решение                      | Нужен Redmine    | Миграция схемы    | Доработка           |
+| ---------------------------- | ---------------- | ----------------- | ------------------- |
+| Redmine 4 + Reformat         | Да               | Нет*              | Патч                |
+| Redmine 5 + Reformat         | Да               | Да                | Минимальная*        |
+| Pandoc + Python/MySQL        | Нет              | Нет               | Скрипт обработки БД |
+| Ecodev Rake                  | Да               | Зависит от версии | Адаптация скрипта   |
+| Redmine Convert Script       | Требует проверки | Требует проверки  | Адаптация правил    |
+| Python Textile + Markdownify | Нет              | Нет               | Скрипт и правила    |
+| Textile.js + Turndown        | Нет              | Нет               | Скрипт и правила    |
+| Парсинг SQL-дампа            | Нет              | Нет               | Значительная        |
+
+\\\* При условии подтверждения совместимости компонентов.
+
+### 8\. Что предлагаю исследовать дальше
+
+Из вариантов без плагина я бы выделила Pandoc + Python + MySQL Connector как основной кандидат для PoC.
+
+Можно сделать универсальный контейнер-конвертер, который управляется через YAML-конфигурацию и имеет несколько режимов:
+
+| Режим    | Назначение                         |
+| -------- | ---------------------------------- |
+| analyze  | Анализ таблиц и количества записей |
+| dry-run  | Преобразование без изменения БД    |
+| preview  | Выгрузка значений до и после       |
+| convert  | Массовое преобразование            |
+| validate | Проверка результата                |
+| report   | Формирование отчёта                |
+
+Пример будущей структуры проекта:
+
+redmine-textile-converter
+
+Dockerfile
+
+.gitlab-ci.yml
+
+docker-compose.yml
+
+requirements.txt
+
+config.yaml
+
+README.md
+
+src
+
+main.py
+
+database.py
+
+converter.py
+
+preprocessing.py
+
+postprocessing.py
+
+validation.py
+
+report.py
+
+tests
+
+reports
+
+Это позволит получить полностью независимый инструмент миграции, не привязанный к версии Redmine.
+
+Главный вопрос исследования — качество преобразования Pandoc именно синтаксиса Redmine. Особое внимание необходимо уделить конструкциям `#123`, `[[WikiPage]]`, `{{toc}}`, ссылкам на вложения, блокам кода и истории Wiki.
+
+Готового автономного решения, которое гарантированно обработает всю базу Redmine без приложения и дополнительных доработок, среди найденных проектов пока нет. Но готовый движок преобразования существует, поэтому разработка собственного парсера Textile не потребуется.
